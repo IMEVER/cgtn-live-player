@@ -16,16 +16,16 @@ This app depends some deepin's dtk package and some qt5 package
 # resource
 
 ## Shotcut
-> 1. M  Toggle mute
-> 2. F  Toggle fullscreen
-> 3. F11  Enter fullscreen
-> 4. Esc  Exit fullscreen
-> 5. P  Toggle play and pase
-> 6. space  Toggle play and pase
-> 7. Up Increment volume
-> 8. Down Decrement volume
-> 9. click  Toggle play and pause
-> 10. DbClick Toogle fullscreen
+> 1. **M**  Toggle mute
+> 2. **F**  Toggle fullscreen
+> 3. **F11**  Enter fullscreen
+> 4. **Esc**  Exit fullscreen
+> 5. **P**  Toggle play and pase
+> 6. **space**  Toggle play and pase
+> 7. **Up** Increment volume
+> 8. **Down** Decrement volume
+> 9. **click**  Toggle play and pause
+> 10. **DbClick** Toogle fullscreen
 
 ## Preview
   ![preview](http://app.imever.me/apps/cgtn/prev.png)
