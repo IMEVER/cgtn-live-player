@@ -1,9 +1,0 @@
-package: cgtn-live-player
-version: 1.0.0
-architecture: all
-Maintainer: IMEVER <Hobart_Tian@imever.me>
-description: Cgtn-live-player is a live video player for www.cgtn.com
-Section: base
-Priority: optional
-Installed-Size:46.8KB
-depends:libdtkbase, libdtkwidget, libdtkutil, libqt5core5a,libqt5gui5, libqt5widgets5, libqt5dxcb-plugin, libqt5multimedia5
