@@ -30,4 +30,4 @@ This app depends some deepin's dtk package and some qt5 package
 ## Preview
   ![preview](http://app.imever.me/apps/cgtn/prev.png)
 ## Download
-  [deb](http://app.imever.me/apps/cgtn/cgtn-live-player_1.0.0.deb)
+  [deb](http://app.imever.me/apps/cgtn/cgtn-live-player_1.0.0.deb "cgtn-live-player_1.0.0.deb")
