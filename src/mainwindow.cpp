@@ -35,6 +35,7 @@ MainWindow::MainWindow(QWidget *parent) :
     setCentralWidget(centralWidget);
     setMinimumSize(QSize(400, 400));
 
+    resize(722, 578);
 
 
     QPalette* palette = new QPalette();
@@ -42,6 +43,18 @@ MainWindow::MainWindow(QWidget *parent) :
     palette->setBrush(QPalette::Background, Qt::black);
     videoWidget->setPalette(*palette);
     videoWidget->setAutoFillBackground(true);
+
+    QImage _images;
+    _images.load(":/resource/flash.jpg");
+
+    //QBrush brush = QBrush(QPixmap(":/resource/flash.jpg"));
+
+    QBrush brush = QBrush(QPixmap(":/resource/flash.jpg"));
+
+    palette->setBrush(QPalette::Window,
+    QBrush(_images.scaled(size(), Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation)));
+    videoWidget->setPalette(*palette);
+
     delete palette;
 
     videoWidget->setAspectRatioMode(Qt::KeepAspectRatioByExpanding);
@@ -99,6 +112,12 @@ void MainWindow::initTitleBar()
             DThemeManager *themeManager = DThemeManager::instance();
             themeManager->setTheme("light");
             titlebar->menu()->actions().at(1)->menu()->actions().at(0)->setChecked(false);
+        })->setCheckable(true);
+
+        titlebar->menu()->addAction("TopHint", this, [=](bool checked){
+             Qt::WindowFlags flags = windowFlags();
+             setWindowFlags(flags ^ Qt::WindowStaysOnTopHint);
+             show();
         })->setCheckable(true);
 
         titlebar->menu()->addAction("About", this, [=](){
@@ -188,6 +207,12 @@ bool MainWindow::event(QEvent *event)
         else if(keyEvent->key() == Qt::Key_P || keyEvent->key() == Qt::Key_Space){
             emit toggleTrigger();
         }
+        else if(keyEvent->key() == Qt::Key_T)
+        {
+            Qt::WindowFlags flags = windowFlags();
+            setWindowFlags(flags ^ Qt::WindowStaysOnTopHint);
+            show();
+        }
     }
     return QMainWindow::event(event);
 }
@@ -195,6 +220,7 @@ bool MainWindow::event(QEvent *event)
 void MainWindow::resizeEvent(QResizeEvent *event)
 {
     QSize windowSize = size();
+
     emit windowResize(windowSize);
 }
 

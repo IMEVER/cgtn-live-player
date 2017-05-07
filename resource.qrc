@@ -3,5 +3,6 @@
         <file>resource/cgtn-live-player.png</file>
         <file>resource/pause.png</file>
         <file>resource/play.png</file>
+        <file>resource/flash.jpg</file>
     </qresource>
 </RCC>

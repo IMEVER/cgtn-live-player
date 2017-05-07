@@ -17,20 +17,20 @@ unix{
     PKGCONFIG += dtkbase dtkwidget dtkutil
 }
 
-SOURCES += main.cpp\
-        mainwindow.cpp \
-    app.cpp \
-    about.cpp \
-    player.cpp \
-    playbutton.cpp \
-    volumelabel.cpp
+SOURCES += src/main.cpp\
+        src/mainwindow.cpp \
+    src/app.cpp \
+    src/about.cpp \
+    src/player.cpp \
+    src/playbutton.cpp \
+    src/volumelabel.cpp
 
-HEADERS  += mainwindow.h \
-    app.h \
-    about.h \
-    player.h \
-    playbutton.h \
-    volumelabel.h
+HEADERS  += src/mainwindow.h \
+    src/app.h \
+    src/about.h \
+    src/player.h \
+    src/playbutton.h \
+    src/volumelabel.h
 
 DISTFILES +=
 FORMS +=
