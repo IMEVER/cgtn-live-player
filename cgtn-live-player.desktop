@@ -1,0 +1,15 @@
+[Desktop Entry]
+Categories=Application;Video
+Comment=Cgtn live player
+Exec=cgtn-live-player
+GenericName=Cgtn player
+Icon=cgtn-live-player
+Name=Cgtn Live Player
+StartupNotify=false
+Terminal=false
+Type=Application
+
+# Translations
+Comment[zh_CN]=Cgtn live player
+GenericName[zh_CN]=Cgtn live player
+Name[zh_CN]=Cgtn live player
