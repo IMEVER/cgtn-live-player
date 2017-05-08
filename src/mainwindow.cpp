@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include <QVideoWidget>
+#include <QVideoWidget>
 #include <QMediaPlaylist>
 #include <dvideowidget.h>
 #include <QKeyEvent>
@@ -25,7 +26,8 @@ MainWindow::MainWindow(QWidget *parent) :
     mainLayout->setMargin(0);
     mainLayout->setStackingMode(QStackedLayout::StackAll);
 
-    DVideoWidget *videoWidget = new DVideoWidget;
+    //DVideoWidget *videoWidget = new DVideoWidget;
+    QVideoWidget *videoWidget = new QVideoWidget;
 
     mainLayout->addWidget(videoWidget);
 
@@ -39,7 +41,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
     QPalette* palette = new QPalette();
-
     palette->setBrush(QPalette::Background, Qt::black);
     videoWidget->setPalette(*palette);
     videoWidget->setAutoFillBackground(true);
@@ -51,15 +52,15 @@ MainWindow::MainWindow(QWidget *parent) :
 
     QBrush brush = QBrush(QPixmap(":/resource/flash.jpg"));
 
-    palette->setBrush(QPalette::Window,
-    QBrush(_images.scaled(size(), Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation)));
+    palette->setBrush(QPalette::Window, QBrush(_images.scaled(size(), Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation)));
     videoWidget->setPalette(*palette);
 
     delete palette;
 
     videoWidget->setAspectRatioMode(Qt::KeepAspectRatioByExpanding);
-    videoWidget->setSource(&mediaPlayer);
+    //videoWidget->setSource(&mediaPlayer);
 
+    mediaPlayer.setVideoOutput(videoWidget);
     mediaPlayer.setMedia(QUrl(url));
 
     mediaPlayer.setVolume(50);
