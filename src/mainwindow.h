@@ -39,6 +39,7 @@ private:
     bool pressing;
     qint64 current;
     void initAboutDialog();
+    void toggleTopHint();
     void mousePressEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);

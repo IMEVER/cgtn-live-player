@@ -116,9 +116,7 @@ void MainWindow::initTitleBar()
         })->setCheckable(true);
 
         titlebar->menu()->addAction("TopHint", this, [=](bool checked){
-             Qt::WindowFlags flags = windowFlags();
-             setWindowFlags(flags ^ Qt::WindowStaysOnTopHint);
-             show();
+            toggleTopHint();
         })->setCheckable(true);
 
         titlebar->menu()->addAction("About", this, [=](){
@@ -127,6 +125,13 @@ void MainWindow::initTitleBar()
 
          titlebar->menu()->addAction("Exit", qApp, SLOT(quit()));
     }
+}
+
+void MainWindow::toggleTopHint()
+{
+        Qt::WindowFlags flags = windowFlags();
+        setWindowFlags(flags ^ Qt::WindowStaysOnTopHint ^ Qt::X11BypassWindowManagerHint );
+        show();
 }
 
 void MainWindow::addVolumeLabel(DLabel *label)
@@ -210,9 +215,7 @@ bool MainWindow::event(QEvent *event)
         }
         else if(keyEvent->key() == Qt::Key_T)
         {
-            Qt::WindowFlags flags = windowFlags();
-            setWindowFlags(flags ^ Qt::WindowStaysOnTopHint);
-            show();
+                toggleTopHint();
         }
     }
     return QMainWindow::event(event);
