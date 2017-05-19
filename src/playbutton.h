@@ -1,24 +1,30 @@
 #ifndef PLAYBUTTON_H
 #define PLAYBUTTON_H
 
-#include <dimagebutton.h>
-
-DWIDGET_USE_NAMESPACE
+#include <QPushButton>
 
 class PlayButton : public QObject
 {
+    Q_OBJECT
+
 private:
     QPoint point;
-public:
-    DImageButton *playButton;
+    bool checked;
+    QPixmap *pauseMap;
+    QPixmap *playMap;
 
-    explicit PlayButton();
+public:
+    PlayButton();
     ~PlayButton();
+    QPushButton *playButton;
     void moveTo(int x, int y);
-    bool isChecked();
+    bool isPaused();
+
+signals:
+    void stateChange(bool checked = false);
 
 public slots:
-    void toogle();
+    void setChecked(bool checked);
 };
 
 #endif // PLAYBUTTON_H

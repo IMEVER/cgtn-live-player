@@ -6,8 +6,6 @@
 #include "volumelabel.h"
 #include "about.h"
 
-DWIDGET_USE_NAMESPACE
-
 class Player : QObject
 {
     Q_OBJECT
@@ -26,7 +24,7 @@ public:
 
 public slots:
     void resize(QSize size);
-    void stateChanged();
+    void stateChanged(bool checked);
 };
 
 #endif // PLAYER_H

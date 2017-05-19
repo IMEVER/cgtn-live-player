@@ -1,16 +1,12 @@
-#include <DApplication>
+#include <QApplication>
 #include "app.h"
+#include <QtGui>
 
 int main(int argc, char *argv[])
 {
-    DApplication::loadDXcbPlugin();
-
-    DApplication a(argc, argv);
+    QApplication a(argc, argv);
     App app;
-
     app.run();
-
-    a.setTheme("dark");
 
     return a.exec();
 }

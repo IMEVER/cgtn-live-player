@@ -1,16 +1,14 @@
 #ifndef VOLUMELABEL_H
 #define VOLUMELABEL_H
 
-#include <dlabel.h>
-
-DWIDGET_USE_NAMESPACE
+#include <qlabel.h>
 
 class VolumeLabel : public QObject
 {
     Q_OBJECT
 
 public:
-    DLabel *label;
+    QLabel *label;
 
     VolumeLabel();
     ~VolumeLabel();

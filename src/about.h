@@ -1,16 +1,14 @@
 #ifndef ABOUT_H
 #define ABOUT_H
 
-#include <DAboutDialog>
-
-DWIDGET_USE_NAMESPACE
+#include "aboutdialog.h"
 
 class About : public QObject
 {
     Q_OBJECT
 
 private:
-    DAboutDialog *about;
+    AboutDialog *about;
 
 public:
     About();

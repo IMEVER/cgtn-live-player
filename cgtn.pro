@@ -6,7 +6,7 @@
 
 # libgstreamer-plugins-bad0.10-0
 
-QT       += core gui multimediawidgets multimedia
+QT       += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -16,7 +16,7 @@ TEMPLATE = app
 CONFIG += link_pkgconfig
 
 unix{
-    PKGCONFIG += dtkbase dtkwidget dtkutil
+    PKGCONFIG +=
 }
 
 SOURCES += src/main.cpp\
@@ -25,17 +25,21 @@ SOURCES += src/main.cpp\
     src/about.cpp \
     src/player.cpp \
     src/playbutton.cpp \
-    src/volumelabel.cpp
+    src/volumelabel.cpp \
+    src/aboutdialog.cpp
 
 HEADERS  += src/mainwindow.h \
     src/app.h \
     src/about.h \
     src/player.h \
     src/playbutton.h \
-    src/volumelabel.h
+    src/volumelabel.h \
+    src/aboutdialog.h
 
 DISTFILES +=
 FORMS +=
+
+LIBS += -lvlc -lvlccore
 
 RESOURCES += \
     resource.qrc

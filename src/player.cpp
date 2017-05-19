@@ -1,23 +1,21 @@
 #include "player.h"
-#include <dutility.h>
-
-DWIDGET_USE_NAMESPACE
+#include <QtGui>
 
 Player::Player() : QObject()
 {
     playButton = new PlayButton;
     label = new VolumeLabel();
     mainwWindow = new MainWindow;
-    mainwWindow->initTitleBar();
     mainwWindow->addVolumeLabel(label->label);
 
-    mainwWindow->addPlayButton(playButton->playButton);//playButton->playButton->show();
+    mainwWindow->addPlayButton(playButton->playButton);
     connect(mainwWindow, SIGNAL(windowResize(QSize )), this, SLOT(resize(QSize )));
-    mainwWindow->connect(mainwWindow, &MainWindow::toggleTrigger, this, [=](){
-        resize(mainwWindow->size());
-        playButton->toogle();
+    mainwWindow->connect(mainwWindow, &MainWindow::toggleTrigger, this, [=](bool isPlaying){
+        //resize(mainwWindow->size());
+        playButton->setChecked(isPlaying);
     });
-    connect(playButton->playButton, SIGNAL(stateChanged()), this, SLOT(stateChanged()));
+
+    connect(playButton, SIGNAL(stateChange(bool)), this, SLOT(stateChanged(bool)));
 
     connect(mainwWindow, SIGNAL(volumeChanged(int)), label, SLOT(volumeChanged(int)));
 }
@@ -31,7 +29,6 @@ Player::~Player()
 
 void Player::run()
 {
-    DUtility::moveToCenter(mainwWindow);
     mainwWindow->show();
 }
 
@@ -49,13 +46,8 @@ void Player::bind(About *about)
     });
 }
 
-void Player::stateChanged()
+void Player::stateChanged(bool checked)
 {
-    if(playButton->playButton->getState() == DImageButton::Checked || playButton->playButton->getState() == DImageButton::Normal)
-    {
-        qDebug()<<"click triggered occurs"<<playButton->isChecked();
-        mainwWindow->toggle();
-        if(playButton->playButton->getState() == DImageButton::Normal)
-            playButton->playButton->hide();
-    }
+        qDebug()<<"click triggered occurs"<<checked;
+        mainwWindow->play(!checked);
 }

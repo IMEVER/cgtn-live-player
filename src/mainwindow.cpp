@@ -1,98 +1,71 @@
 #include "mainwindow.h"
-#include <QVideoWidget>
-#include <QVideoWidget>
-#include <QMediaPlaylist>
-#include <dvideowidget.h>
 #include <QKeyEvent>
-#include <DTitlebar>
 #include <QVBoxLayout>
-#include <dthememanager.h>
 #include <QApplication>
 #include <qapplication.h>
-#include <DAboutDialog>
 #include <QStackedLayout>
 #include <QEvent>
+#include <vlc/libvlc_media.h>
 
-using namespace Dtk::Widget;
-
-MainWindow::MainWindow(QWidget *parent) :
-    DMainWindow(parent)
+MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
     timerId = 0;
-    DThemeManager *themeManager = DThemeManager::instance();
-    themeManager->setTheme("dark");
 
     mainLayout = new QStackedLayout();
     mainLayout->setMargin(0);
     mainLayout->setStackingMode(QStackedLayout::StackAll);
 
-    //DVideoWidget *videoWidget = new DVideoWidget;
-    QVideoWidget *videoWidget = new QVideoWidget;
+    _videoWidget=new QFrame(this);
+    mainLayout->addWidget(_videoWidget);
 
-    mainLayout->addWidget(videoWidget);
+//    QPixmap bkgnd(":/resource/flash.jpg");
+//    bkgnd = bkgnd.scaled(this->size(), Qt::KeepAspectRatioByExpanding);
+
+//    QPalette palette;
+//    palette.setBrush(this->backgroundRole(), bkgnd);
+//    this->setPalette(palette);
+
+    _vlcinstance=libvlc_new(0, NULL);
+    _mp = libvlc_media_player_new (_vlcinstance);
+    _m = libvlc_media_new_location( _vlcinstance, url.toLatin1().data());
+
+    libvlc_media_player_set_media (_mp, _m);
+    int windid = _videoWidget->winId();
+    libvlc_media_player_set_xwindow (_mp, windid );
 
      QWidget *centralWidget = new QWidget(this);
+     centralWidget->setStyleSheet("background-color: black");
      centralWidget->setLayout(mainLayout);
 
     setCentralWidget(centralWidget);
-    setMinimumSize(QSize(400, 400));
+    setMinimumSize(QSize(410, 280));
 
-    resize(722, 578);
+    libvlc_media_player_play(_mp);
+    libvlc_video_set_mouse_input(_mp, false);
 
+    resize(_videoWidget->sizeHint());
 
-    QPalette* palette = new QPalette();
-    palette->setBrush(QPalette::Background, Qt::black);
-    videoWidget->setPalette(*palette);
-    videoWidget->setAutoFillBackground(true);
-
-    QImage _images;
-    _images.load(":/resource/flash.jpg");
-
-    //QBrush brush = QBrush(QPixmap(":/resource/flash.jpg"));
-
-    QBrush brush = QBrush(QPixmap(":/resource/flash.jpg"));
-
-    palette->setBrush(QPalette::Window, QBrush(_images.scaled(size(), Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation)));
-    videoWidget->setPalette(*palette);
-
-    delete palette;
-
-    videoWidget->setAspectRatioMode(Qt::KeepAspectRatioByExpanding);
-    //videoWidget->setSource(&mediaPlayer);
-
-    mediaPlayer.setVideoOutput(videoWidget);
-    mediaPlayer.setMedia(QUrl(url));
-
-    mediaPlayer.setVolume(50);
-
-    connect(&mediaPlayer, static_cast<void(QMediaObject::*)(const QString &, const QVariant &)>(&QMediaObject::metaDataChanged),
-        [=](const QString &key, const QVariant &value){
-        if(key == "Resolution")
-        {
-            QSize size = value.toSize();
-            resize(size.width(), size.height());
-            mediaPlayer.play();
-        }
-    });
+    initContextMenu();
 }
 
-void MainWindow::addPlayButton(DImageButton *playButton)
+#ifndef QT_NO_CONTEXTMENU
+void MainWindow::contextMenuEvent(QContextMenuEvent *event)
+{
+    contextMenu->exec(event->globalPos());
+}
+#endif // QT_NO_CONTEXTMENU
+
+void MainWindow::addPlayButton(QPushButton *playButton)
 {
     mainLayout->addWidget(playButton);
     playButton->raise();
     playButton->hide();
 }
 
-void MainWindow::initTitleBar()
+void MainWindow::initContextMenu()
 {
-    DTitlebar *titlebar = this->titleBar();
-
-    if (titlebar) {
-        titlebar->setTitle("Cgtn live player");
-        titlebar->setMenu(new QMenu(titlebar));
-        titlebar->setSeparatorVisible(true);
-
-        QMenu *shortMenu = titlebar->menu()->addMenu("ShortCut Key");
+    contextMenu = new QMenu(this);
+        QMenu *shortMenu = contextMenu->addMenu("ShortCut Key");
         shortMenu->addAction("Up | Down => Change volume");
         shortMenu->addAction("F | DbClick => Toogle fullscreen");
         shortMenu->addAction("F11 => Enter fullscreen");
@@ -100,31 +73,16 @@ void MainWindow::initTitleBar()
         shortMenu->addAction("P | Space | Click => Toogle play and pause");
         shortMenu->addAction("M => Mute");
 
-        QMenu *menu = titlebar->menu()->addMenu("Style");
-
-        menu->addAction("dark", this, [=](){
-            DThemeManager *themeManager = DThemeManager::instance();
-            themeManager->setTheme("dark");
-            titlebar->menu()->actions().at(1)->menu()->actions().at(1)->setChecked(false);
-        })->setCheckable(true);
-        titlebar->menu()->actions().at(1)->menu()->actions().at(0)->setChecked(true);
-
-        menu->addAction("light", this, [=](){
-            DThemeManager *themeManager = DThemeManager::instance();
-            themeManager->setTheme("light");
-            titlebar->menu()->actions().at(1)->menu()->actions().at(0)->setChecked(false);
-        })->setCheckable(true);
-
-        titlebar->menu()->addAction("TopHint", this, [=](bool checked){
+        contextMenu->addAction("TopHint", this, [=](bool checked){
             toggleTopHint();
         })->setCheckable(true);
 
-        titlebar->menu()->addAction("About", this, [=](){
+        contextMenu->addAction("About", this, [=](){
             emit menuTrigger(1);
         });
 
-         titlebar->menu()->addAction("Exit", qApp, SLOT(quit()));
-    }
+        contextMenu->addAction("Exit", qApp, SLOT(quit()));
+        contextMenu->setStyleSheet("background-color: grey");
 }
 
 void MainWindow::toggleTopHint()
@@ -134,23 +92,25 @@ void MainWindow::toggleTopHint()
         show();
 }
 
-void MainWindow::addVolumeLabel(DLabel *label)
+void MainWindow::addVolumeLabel(QLabel *label)
 {
     mainLayout->addWidget(label);
     label->raise();
     label->hide();
 }
 
-void MainWindow::toggle()
+void MainWindow::play(bool play)
 {
-    qDebug()<<"toggle play";
-    if(mediaPlayer.state() == QMediaPlayer::PlayingState)
+    //qDebug()<<"toggle play";
+    if(libvlc_media_player_is_playing(_mp))
     {
-        mediaPlayer.pause();
+        if(!play)
+                libvlc_media_player_pause(_mp);
     }
     else
     {
-        mediaPlayer.play();
+        if(play)
+                libvlc_media_player_play(_mp);
     }
 }
 
@@ -160,6 +120,17 @@ MainWindow::~MainWindow()
         killTimer(timerId);
 }
 
+void MainWindow::toogle()
+{
+    int playing = libvlc_media_player_is_playing(_mp);
+    if(playing == 1) {
+        libvlc_media_player_pause(_mp);
+    } else {
+        libvlc_media_player_play(_mp);
+    }
+    emit toggleTrigger(playing == 1 ? true : false);
+}
+
 bool MainWindow::event(QEvent *event)
 {
     if (event->type() == QEvent::KeyPress)
@@ -167,18 +138,16 @@ bool MainWindow::event(QEvent *event)
         QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
         if(keyEvent->key() == Qt::Key_F || keyEvent->key() == Qt::Key_Enter)
         {
+            //libvlc_toggle_fullscreen(_mp);
             if(isFullScreen()){
-                titleBar()->show();
                 showNormal();
             } else {
-                titleBar()->hide();
               showFullScreen();
             }
         }
         else if(keyEvent->key() == Qt::Key_F11)
         {
             if(isFullScreen() == false){
-                titleBar()->hide();
                 showFullScreen();
             }
         }
@@ -186,32 +155,31 @@ bool MainWindow::event(QEvent *event)
         {
             if(isFullScreen())
             {
-                titleBar()->show();
                 showNormal();
             }
         }
         else if(keyEvent->key() == Qt::Key_Up)
         {
-            int volume = mediaPlayer.volume() + 5;
+            int volume = libvlc_audio_get_volume(_mp) + 5;
             if(volume > 100)
                 volume = 100;
-            mediaPlayer.setVolume(volume);
+            libvlc_audio_set_volume(_mp, volume);
             emit volumeChanged(volume);
         }
         else if(keyEvent->key() == Qt::Key_Down)
         {
-            int volume = mediaPlayer.volume() - 5;
+            int volume = libvlc_audio_get_volume(_mp) - 5;
             if(volume < 0)
                 volume = 0;
-             mediaPlayer.setVolume(volume > 4 ? volume-5 : 0);
+            libvlc_audio_set_volume(_mp, volume);
              emit volumeChanged(volume);
         }
         else if(keyEvent->key() == Qt::Key_M)
         {
-            mediaPlayer.setMuted(!mediaPlayer.isMuted());
+            libvlc_audio_toggle_mute(_mp);
         }
         else if(keyEvent->key() == Qt::Key_P || keyEvent->key() == Qt::Key_Space){
-            emit toggleTrigger();
+            toogle();
         }
         else if(keyEvent->key() == Qt::Key_T)
         {
@@ -230,9 +198,11 @@ void MainWindow::resizeEvent(QResizeEvent *event)
 
 void MainWindow::mousePressEvent(QMouseEvent *event)
 {
+    if(event->button() == Qt::LeftButton)
+    {
     if(timerId == 0)
     {
-        qDebug()<<"click triggered";
+        //qDebug()<<"click triggered";
         pressing = true;
         timerId = startTimer(700);
         current = QDateTime::currentMSecsSinceEpoch();
@@ -240,19 +210,28 @@ void MainWindow::mousePressEvent(QMouseEvent *event)
         killTimer(timerId);
         timerId = 0;
     }
+    mLastMousePosition = event->globalPos();
+    }
 }
 
 void MainWindow::mouseMoveEvent(QMouseEvent *event)
 {
+    if(event->buttons().testFlag(Qt::LeftButton))
+    {
     if(timerId > 0)
     {
         killTimer(timerId);
         timerId = 0;
     }
+
+
+    this->move(this->pos() + (event->globalPos() - mLastMousePosition));
+    mLastMousePosition = event->globalPos();
+    }
 }
 
 void MainWindow::mouseReleaseEvent(QMouseEvent *event)
-{
+{  
     pressing = false;
 }
 
@@ -263,9 +242,9 @@ void MainWindow::timerEvent(QTimerEvent *event)
         qint64 now = QDateTime::currentMSecsSinceEpoch();
         killTimer(timerId);
         timerId = 0;
-        if(now - current < 700)
+        if(now - current < 800)
         {
-            emit toggleTrigger();
+           toogle();
         }
     }
 }
