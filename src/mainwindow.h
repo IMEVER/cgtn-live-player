@@ -2,16 +2,13 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QMediaPlayer>
 #include <QPoint>
 #include <QDateTime>
 #include <QStackedLayout>
 #include <QMenuBar>
 #include <QPushButton>
-#include <QFrame>
 #include <QLabel>
-#include <vlc/libvlc.h>
-#include <vlc/libvlc_media.h>
-#include <vlc/libvlc_media_player.h>
 
 class MainWindow : public QMainWindow
 {
@@ -22,6 +19,7 @@ public:
     ~MainWindow();
 
     QStackedLayout *mainLayout;
+    QMediaPlayer mediaPlayer;
 
     void initContextMenu();
     void addPlayButton(QPushButton *playButton);
@@ -40,12 +38,8 @@ protected:
 
 private:    
     QMenu *contextMenu;
-    QFrame *_videoWidget;
     QTimer *poller;
     bool _isPlaying;
-    libvlc_instance_t *_vlcinstance;
-    libvlc_media_player_t *_mp;
-    libvlc_media_t *_m;
     QString url = QString("https://live.cgtn.com/manifest.m3u8");
     int timerId;
     bool pressing;

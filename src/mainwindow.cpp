@@ -1,11 +1,11 @@
 #include "mainwindow.h"
+#include <QVideoWidget>
 #include <QKeyEvent>
 #include <QVBoxLayout>
 #include <QApplication>
 #include <qapplication.h>
 #include <QStackedLayout>
 #include <QEvent>
-#include <vlc/libvlc_media.h>
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
@@ -15,42 +15,47 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     mainLayout->setMargin(0);
     mainLayout->setStackingMode(QStackedLayout::StackAll);
 
-    _videoWidget=new QFrame(this);
-    mainLayout->addWidget(_videoWidget);
-
 //    QPixmap bkgnd(":/resource/flash.jpg");
 //    bkgnd = bkgnd.scaled(this->size(), Qt::KeepAspectRatioByExpanding);
-
 //    QPalette palette;
 //    palette.setBrush(this->backgroundRole(), bkgnd);
 //    this->setPalette(palette);
 
-    _vlcinstance=libvlc_new(0, NULL);
-    _mp = libvlc_media_player_new (_vlcinstance);
-    _m = libvlc_media_new_location( _vlcinstance, url.toLatin1().data());
+     QVideoWidget *_videoWidget=new QVideoWidget;
+     _videoWidget->setAspectRatioMode(Qt::KeepAspectRatioByExpanding);
+     mainLayout->addWidget(_videoWidget);
 
-    libvlc_media_player_set_media (_mp, _m);
-    int windid = _videoWidget->winId();
-    libvlc_media_player_set_xwindow (_mp, windid );
+     //videoWidget->setSource(&mediaPlayer);
+
+     mediaPlayer.setVideoOutput(_videoWidget);
+     mediaPlayer.setMedia(QUrl(url));
+     mediaPlayer.setVolume(50);
+
+     connect(&mediaPlayer, static_cast<void(QMediaObject::*)(const QString &, const QVariant &)>(&QMediaObject::metaDataChanged),
+         [=](const QString &key, const QVariant &value){
+         if(key == "Resolution")
+         {
+             QSize size = value.toSize();
+             resize(size.width(), size.height());
+             mediaPlayer.play();
+         }
+      });
+
 
      QWidget *centralWidget = new QWidget(this);
      centralWidget->setStyleSheet("background-color: black");
      centralWidget->setLayout(mainLayout);
 
     setCentralWidget(centralWidget);
-    setMinimumSize(QSize(410, 280));
-
-    libvlc_media_player_play(_mp);
-    libvlc_video_set_mouse_input(_mp, false);
-
-    resize(_videoWidget->sizeHint());
-
-    initContextMenu();
+//    setMinimumSize(QSize(410, 280));
+//    resize(_videoWidget->sizeHint());
+//    initContextMenu();
 }
 
 #ifndef QT_NO_CONTEXTMENU
 void MainWindow::contextMenuEvent(QContextMenuEvent *event)
 {
+    qDebug()<<"Right click trigger";
     contextMenu->exec(event->globalPos());
 }
 #endif // QT_NO_CONTEXTMENU
@@ -101,16 +106,16 @@ void MainWindow::addVolumeLabel(QLabel *label)
 
 void MainWindow::play(bool play)
 {
-    //qDebug()<<"toggle play";
-    if(libvlc_media_player_is_playing(_mp))
+    qDebug()<<"toggle play";
+    if(mediaPlayer.state() == QMediaPlayer::PlayingState)
     {
         if(!play)
-                libvlc_media_player_pause(_mp);
+                mediaPlayer.pause();
     }
     else
     {
         if(play)
-                libvlc_media_player_play(_mp);
+                mediaPlayer.play();
     }
 }
 
@@ -122,13 +127,18 @@ MainWindow::~MainWindow()
 
 void MainWindow::toogle()
 {
-    int playing = libvlc_media_player_is_playing(_mp);
-    if(playing == 1) {
-        libvlc_media_player_pause(_mp);
-    } else {
-        libvlc_media_player_play(_mp);
+    qDebug()<<"toggle play";
+    bool playing = mediaPlayer.state() == QMediaPlayer::PlayingState;
+    if(playing)
+    {
+        mediaPlayer.pause();
     }
-    emit toggleTrigger(playing == 1 ? true : false);
+    else
+    {
+        mediaPlayer.play();
+    }
+
+    emit toggleTrigger(playing);
 }
 
 bool MainWindow::event(QEvent *event)
@@ -138,7 +148,6 @@ bool MainWindow::event(QEvent *event)
         QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
         if(keyEvent->key() == Qt::Key_F || keyEvent->key() == Qt::Key_Enter)
         {
-            //libvlc_toggle_fullscreen(_mp);
             if(isFullScreen()){
                 showNormal();
             } else {
@@ -160,23 +169,29 @@ bool MainWindow::event(QEvent *event)
         }
         else if(keyEvent->key() == Qt::Key_Up)
         {
-            int volume = libvlc_audio_get_volume(_mp) + 5;
-            if(volume > 100)
-                volume = 100;
-            libvlc_audio_set_volume(_mp, volume);
+            int volume = mediaPlayer.volume();
+            if(volume < 100) {
+                volume += 5;
+                 if(volume > 100)
+                    volume = 100;
+                mediaPlayer.setVolume(volume);
+            }
             emit volumeChanged(volume);
         }
         else if(keyEvent->key() == Qt::Key_Down)
         {
-            int volume = libvlc_audio_get_volume(_mp) - 5;
-            if(volume < 0)
-                volume = 0;
-            libvlc_audio_set_volume(_mp, volume);
+            int volume = mediaPlayer.volume();
+            if(volume > 0) {
+                volume -= 5;
+                if(volume < 0)
+                    volume = 0;
+                mediaPlayer.setVolume(volume);
+            }
              emit volumeChanged(volume);
         }
         else if(keyEvent->key() == Qt::Key_M)
         {
-            libvlc_audio_toggle_mute(_mp);
+            mediaPlayer.setMuted(!mediaPlayer.isMuted());
         }
         else if(keyEvent->key() == Qt::Key_P || keyEvent->key() == Qt::Key_Space){
             toogle();

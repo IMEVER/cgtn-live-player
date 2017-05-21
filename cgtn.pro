@@ -6,7 +6,7 @@
 
 # libgstreamer-plugins-bad0.10-0
 
-QT       += core gui
+QT       += core gui multimediawidgets multimedia
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -38,8 +38,6 @@ HEADERS  += src/mainwindow.h \
 
 DISTFILES +=
 FORMS +=
-
-LIBS += -lvlc
 
 RESOURCES += \
     resource.qrc
