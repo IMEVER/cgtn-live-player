@@ -30,4 +30,5 @@ This app depends some deepin's dtk package and some qt5 package
 ## Preview
   ![preview](http://app.imever.me/apps/cgtn/prev.png)
 ## Download
-  [deb](http://app.imever.me/apps/cgtn/cgtn-live-player_1.0.0.deb "cgtn-live-player_1.0.0.deb")
+  1. deepin platform use libdtk and gstreamer1.0-plugins-bad [deb](http://app.imever.me/apps/cgtn/cgtn-live-player_1.0.0.deb "cgtn-live-player_1.0.0.deb")
+  2. debian platform use vlc plugin [deb](http://app.imever.me/apps/cgtn/cgtn-live-player-vlc_1.0.1.deb "cgtn-live-player-vlc_1.0.1.deb")
