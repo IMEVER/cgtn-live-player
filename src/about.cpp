@@ -13,20 +13,19 @@ About::~About()
 void About::init()
 {
     QPixmap pixmap;
-    bool loaded = pixmap.load(QString(":/resource/cgtn-live-player.png"));
-//    if(!loaded)
-//        qDebug()<<"load image failed";
+    pixmap.load(QString(":/resource/cgtn-live-player.png"));
 
-    about = new DAboutDialog;
+    about = new AboutDialog;
+    about->setAttribute(Qt::WA_ShowModal, true);
     about->setWindowTitle("About");
-    QIcon *icon = new QIcon();
-    icon->addPixmap(pixmap, QIcon::Normal);
-    about->setProductIcon(*icon);
+    QIcon icon;
+    icon.addPixmap(pixmap, QIcon::Normal);
+
+    about->setProductIcon(icon);
     about->setProductName("Cgtn live player");
+    about->setProductLink("https://github.com/IMEVER/cgtn-live-player");
     about->setWebsiteLink("http://www.imever.me");
     about->setWebsiteName("IMEVER");
-//    about->setCompanyLogo(pixmap);
-    about->setAcknowledgementLink("http://www.imever.me");
     about->setVersion("1.0.0");
     about->setDescription("A cgtn live player for deepin user");
 }

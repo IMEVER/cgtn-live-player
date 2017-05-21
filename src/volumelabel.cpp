@@ -2,7 +2,7 @@
 
 VolumeLabel::VolumeLabel() : QObject()
 {
-    timeout = 2500;
+    timeout = 1500;
     timerId = 0;
     volume = 50;
     point = QPoint();
@@ -10,21 +10,17 @@ VolumeLabel::VolumeLabel() : QObject()
     label->setFixedSize(QSize(140, 100));
     label->setAlignment(Qt::AlignCenter);
 
-    QFont ft;
-    ft.setPointSize(80);
-    label->setFont(ft);
+    //QFont ft;
+    //ft.setPointSize(80);
+    //label->setFont(ft);
 
     //设置颜色
-    QPalette pa;
-    pa.setColor(QPalette::WindowText,Qt::white);
-    label->setPalette(pa);
-
-    label->setAutoFillBackground(true);
-    label->setStyleSheet("border: 1px solid black; border-radius: 10px; font-size: 80px; color: white; background-color: rgba(0,0,0, 120)");
-
-//    pa.setColor(QPalette::Background, QColor(0x00,0xff,0x00,0x30));
-
+//    QPalette pa;
+//    pa.setColor(QPalette::WindowText,Qt::white);
 //    label->setPalette(pa);
+    //label->setAutoFillBackground(true);
+    label->setStyleSheet("border: 1px solid black; border-radius: 10px; font-size: 80px; color: white; background-color: rgba(0,0,0, 120)");
+//    pa.setColor(QPalette::Background, QColor(0x00,0xff,0x00,0x30));
 }
 
 VolumeLabel::~VolumeLabel()
@@ -45,7 +41,7 @@ int VolumeLabel::getVolume()
 void VolumeLabel::moveTo(int x, int y)
 {
     point.setX(x - 70);
-    point.setY(y - 100);
+    point.setY(y - 60);
 }
 
 void VolumeLabel::volumeChanged(int volume)
@@ -56,6 +52,7 @@ void VolumeLabel::volumeChanged(int volume)
         this->volume = volume;
         label->setText(QString::number(volume));
 
+        label->raise();
         label->show();
         label->move(point);
     }
@@ -72,4 +69,13 @@ void VolumeLabel::volumeChanged(int volume)
 void VolumeLabel::timerEvent(QTimerEvent *event)
 {
     label->hide();
+}
+
+void VolumeLabel::hide()
+{
+    label->hide();
+    if(timerId > 0) {
+        killTimer(timerId);
+        timerId = 0;
+    }
 }

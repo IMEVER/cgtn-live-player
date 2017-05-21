@@ -1,16 +1,19 @@
-#include <DApplication>
+#include <QApplication>
+#include <qpa/qplatformintegrationfactory_p.h>
 #include "app.h"
+#include <QtGui>
+
+#define DXCB_PLUGIN_KEY "dxcb"
 
 int main(int argc, char *argv[])
 {
-    DApplication::loadDXcbPlugin();
+    if (QPlatformIntegrationFactory::keys().contains(DXCB_PLUGIN_KEY)) {
+         qputenv("QT_QPA_PLATFORM", DXCB_PLUGIN_KEY);
+    }
 
-    DApplication a(argc, argv);
+    QApplication a(argc, argv);
     App app;
-
     app.run();
-
-    a.setTheme("dark");
 
     return a.exec();
 }
