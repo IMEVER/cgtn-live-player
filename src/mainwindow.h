@@ -24,7 +24,7 @@ public:
 
     void initTitleBar();
     void addPlayButton(DImageButton *playButton);
-    void addVolumeLabel(DLabel *label);
+    void addVolumeLabel(QLabel *label);
 
     void toggle();
     bool event(QEvent* event);

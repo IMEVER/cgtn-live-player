@@ -10,7 +10,7 @@ class VolumeLabel : public QObject
     Q_OBJECT
 
 public:
-    DLabel *label;
+    QLabel *label;
 
     VolumeLabel();
     ~VolumeLabel();

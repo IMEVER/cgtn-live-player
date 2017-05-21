@@ -6,7 +6,7 @@ VolumeLabel::VolumeLabel() : QObject()
     timerId = 0;
     volume = 50;
     point = QPoint();
-    label = new DLabel(QString::number(50));
+    label = new QLabel(QString::number(50));
     label->setFixedSize(QSize(140, 100));
     label->setAlignment(Qt::AlignCenter);
 

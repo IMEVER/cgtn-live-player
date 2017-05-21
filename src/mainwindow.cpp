@@ -134,7 +134,7 @@ void MainWindow::toggleTopHint()
         show();
 }
 
-void MainWindow::addVolumeLabel(DLabel *label)
+void MainWindow::addVolumeLabel(QLabel *label)
 {
     mainLayout->addWidget(label);
     label->raise();
