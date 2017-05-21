@@ -12,6 +12,7 @@ Player::Player() : QObject()
     connect(mainwWindow, SIGNAL(windowResize(QSize )), this, SLOT(resize(QSize )));
     mainwWindow->connect(mainwWindow, &MainWindow::toggleTrigger, this, [=](bool isPlaying){
         //resize(mainwWindow->size());
+        label->hide();
         playButton->setChecked(isPlaying);
     });
 

@@ -18,16 +18,9 @@ VolumeLabel::VolumeLabel() : QObject()
 //    QPalette pa;
 //    pa.setColor(QPalette::WindowText,Qt::white);
 //    label->setPalette(pa);
-
     //label->setAutoFillBackground(true);
-    label->setStyleSheet("border: 1px solid black; border-radius: 10px; font-size: 80px; color: white; background-color: rgba(0,0,0, 250)");
-
+    label->setStyleSheet("border: 1px solid black; border-radius: 10px; font-size: 80px; color: white; background-color: rgba(0,0,0, 120)");
 //    pa.setColor(QPalette::Background, QColor(0x00,0xff,0x00,0x30));
-
-    //label->setWindowFlags(Qt::Window | Qt::FramelessWindowHint);
-    //label->setAttribute(Qt::WA_NoSystemBackground, true);
-    label->setAttribute(Qt::WA_TranslucentBackground, true);
-
 }
 
 VolumeLabel::~VolumeLabel()
@@ -59,6 +52,7 @@ void VolumeLabel::volumeChanged(int volume)
         this->volume = volume;
         label->setText(QString::number(volume));
 
+        label->raise();
         label->show();
         label->move(point);
     }
@@ -75,4 +69,13 @@ void VolumeLabel::volumeChanged(int volume)
 void VolumeLabel::timerEvent(QTimerEvent *event)
 {
     label->hide();
+}
+
+void VolumeLabel::hide()
+{
+    label->hide();
+    if(timerId > 0) {
+        killTimer(timerId);
+        timerId = 0;
+    }
 }

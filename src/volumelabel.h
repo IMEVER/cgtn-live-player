@@ -25,6 +25,7 @@ public:
     void setVolume(int volume);
     int getVolume();
     void moveTo(int x, int y);
+    void hide();
 
 public slots:
     void volumeChanged(int volume);

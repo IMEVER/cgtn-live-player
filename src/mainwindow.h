@@ -46,6 +46,7 @@ private:
     qint64 current;
     QPoint mLastMousePosition;
 
+    bool isPlaying();
     void toogle();
     void toggleTopHint();
     void mousePressEvent(QMouseEvent *event);

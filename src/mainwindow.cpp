@@ -25,6 +25,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
      _videoWidget->setAspectRatioMode(Qt::KeepAspectRatioByExpanding);
      mainLayout->addWidget(_videoWidget);
 
+     QWidget *centralWidget = new QWidget(this);
+     centralWidget->setStyleSheet("background-color: black");
+     centralWidget->setLayout(mainLayout);
+     setCentralWidget(centralWidget);
+
      //videoWidget->setSource(&mediaPlayer);
 
      mediaPlayer.setVideoOutput(_videoWidget);
@@ -41,15 +46,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
          }
       });
 
-
-     QWidget *centralWidget = new QWidget(this);
-     centralWidget->setStyleSheet("background-color: black");
-     centralWidget->setLayout(mainLayout);
-
-    setCentralWidget(centralWidget);
-//    setMinimumSize(QSize(410, 280));
-//    resize(_videoWidget->sizeHint());
-//    initContextMenu();
+    setMinimumSize(QSize(410, 280));
+    resize(_videoWidget->sizeHint());
+    initContextMenu();
 }
 
 #ifndef QT_NO_CONTEXTMENU
@@ -87,7 +86,12 @@ void MainWindow::initContextMenu()
         });
 
         contextMenu->addAction("Exit", qApp, SLOT(quit()));
-        contextMenu->setStyleSheet("background-color: grey");
+        contextMenu->setStyleSheet("border-radius: 5px; background-color: grey");
+}
+
+bool MainWindow::isPlaying()
+{
+    return mediaPlayer.state() == QMediaPlayer::PlayingState;
 }
 
 void MainWindow::toggleTopHint()
@@ -107,7 +111,7 @@ void MainWindow::addVolumeLabel(QLabel *label)
 void MainWindow::play(bool play)
 {
     qDebug()<<"toggle play";
-    if(mediaPlayer.state() == QMediaPlayer::PlayingState)
+    if(isPlaying())
     {
         if(!play)
                 mediaPlayer.pause();
@@ -128,7 +132,7 @@ MainWindow::~MainWindow()
 void MainWindow::toogle()
 {
     qDebug()<<"toggle play";
-    bool playing = mediaPlayer.state() == QMediaPlayer::PlayingState;
+    bool playing = isPlaying();
     if(playing)
     {
         mediaPlayer.pause();
@@ -169,25 +173,29 @@ bool MainWindow::event(QEvent *event)
         }
         else if(keyEvent->key() == Qt::Key_Up)
         {
-            int volume = mediaPlayer.volume();
-            if(volume < 100) {
-                volume += 5;
-                 if(volume > 100)
-                    volume = 100;
-                mediaPlayer.setVolume(volume);
+            if(isPlaying()) {
+                   int volume = mediaPlayer.volume();
+                  if(volume < 100) {
+                     volume += 5;
+                      if(volume > 100)
+                         volume = 100;
+                     mediaPlayer.setVolume(volume);
+                 }
+                emit volumeChanged(volume);
             }
-            emit volumeChanged(volume);
         }
         else if(keyEvent->key() == Qt::Key_Down)
         {
-            int volume = mediaPlayer.volume();
-            if(volume > 0) {
-                volume -= 5;
-                if(volume < 0)
-                    volume = 0;
-                mediaPlayer.setVolume(volume);
+            if(isPlaying()) {
+                int volume = mediaPlayer.volume();
+                if(volume > 0) {
+                    volume -= 5;
+                    if(volume < 0)
+                        volume = 0;
+                    mediaPlayer.setVolume(volume);
+                }
+                emit volumeChanged(volume);
             }
-             emit volumeChanged(volume);
         }
         else if(keyEvent->key() == Qt::Key_M)
         {

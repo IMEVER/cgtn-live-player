@@ -6,7 +6,7 @@
 
 # libgstreamer-plugins-bad0.10-0
 
-QT       += core gui multimediawidgets multimedia
+QT       += core gui multimediawidgets multimedia gui-private
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
