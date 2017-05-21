@@ -1,17 +1,13 @@
 # cgtn-live-player
-A qt client for cgtn live player.
+A qt client for cgtn live player. This branch use vlc plugin to play stream.
 * [cgtn website](http://www.cgtn.com)
 * [cgtn stream](https://live.cgtn.com/manifest.m3u8)
 
-This app depends some deepin's dtk package and some qt5 package
-- libdtkbase
-- libdtkwidget
-- libdtkutil,
-- libqt5core5a
-- libqt5gui5
-- libqt5widgets5
-- libqt5dxcb-plugin
-- libqt5multimedia5
+This app depends：
+- libvlc5
+- vlc-plugin-base
+- vlc-plugin-qt
+- vlc-plugin-video-output
 
 # resource
 
@@ -30,4 +26,5 @@ This app depends some deepin's dtk package and some qt5 package
 ## Preview
   ![preview](http://app.imever.me/apps/cgtn/prev.png)
 ## Download
-  [deb](http://app.imever.me/apps/cgtn/cgtn-live-player_1.0.0.deb "cgtn-live-player_1.0.0.deb")
+  1. [deb](http://app.imever.me/apps/cgtn/cgtn-live-player_1.0.0.deb "cgtn-live-player_1.0.0.deb")
+  2. [deb](http://app.imever.me/apps/cgtn/cgtn-live-player-vlc_1.0.1.deb "cgtn-live-player-vlc_1.0.1.deb")
