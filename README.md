@@ -26,5 +26,5 @@ This app depends：
 ## Preview
   ![preview](http://app.imever.me/apps/cgtn/prev.png)
 ## Download
-  1. [deb](http://app.imever.me/apps/cgtn/cgtn-live-player_1.0.0.deb "cgtn-live-player_1.0.0.deb")
-  2. [deb](http://app.imever.me/apps/cgtn/cgtn-live-player-vlc_1.0.1.deb "cgtn-live-player-vlc_1.0.1.deb")
+  1. deepin platform use libdtk and gstreamer1.0-plugins-bad [deb](http://app.imever.me/apps/cgtn/cgtn-live-player_1.0.0.deb "cgtn-live-player_1.0.0.deb")
+  2. debian platform use vlc plugin [deb](http://app.imever.me/apps/cgtn/cgtn-live-player-vlc_1.0.1.deb "cgtn-live-player-vlc_1.0.1.deb")
