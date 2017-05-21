@@ -30,6 +30,10 @@ Player::~Player()
 void Player::run()
 {
     mainwWindow->show();
+//    QRect r = mainwWindow->geometry();
+//    r.moveCenter(QApplication::desktop()->availableGeometry().center());
+//    mainwWindow->setGeometry(r);
+
 }
 
 void Player::resize(QSize size)

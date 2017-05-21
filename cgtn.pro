@@ -10,7 +10,7 @@ QT       += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = cgtn
+TARGET = cgtn-live-player
 TEMPLATE = app
 
 CONFIG += link_pkgconfig
@@ -39,7 +39,7 @@ HEADERS  += src/mainwindow.h \
 DISTFILES +=
 FORMS +=
 
-LIBS += -lvlc -lvlccore
+LIBS += -lvlc
 
 RESOURCES += \
     resource.qrc
