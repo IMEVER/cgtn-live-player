@@ -6,4 +6,4 @@ description: Cgtn-live-player is a live video player for www.cgtn.com
 Section: video
 Priority: optional
 Installed-Size:47
-depends: libvlc5, vlc-plugin-qt, vlc-plugin-base, vlc-plugin-video-output
+depends: gstreamer1.0-plugins-bad, libqt5multimedia5
