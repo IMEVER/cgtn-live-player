@@ -21,4 +21,4 @@ clean:
 
 deb:clean install
 	cd ${DESTDIR};\
-	fakeroot dpkg -b ${BUILDDIR} cgtn-live-player_1.0.0.deb
+	fakeroot dpkg -b ${BUILDDIR} cgtn-live-player_2.0.1.deb
