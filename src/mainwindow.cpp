@@ -6,17 +6,14 @@
 #include <qapplication.h>
 #include <QStackedLayout>
 #include <QEvent>
+#include <time.h>
+#include <QStandardPaths>
+#include <QFile>
 
-MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
+MainWindow::MainWindow(std::vector<Item> tvVector, QWidget *parent) : QMainWindow(parent)
 {
     timerId = 0;
-
-    urls[0] = new Item(QString("English"), QString("https://live.cgtn.com/1000/prog_index.m3u8"));
-    urls[1] = new Item(QString("Español"), QString("https://livees.cgtn.com/1000e/prog_index.m3u8"));
-    urls[2] = new Item(QString("Français"), QString("https://livefr.cgtn.com/1000f/prog_index.m3u8"));
-    urls[3] = new Item(QString("العربية"), QString("https://livear.cgtn.com/1000a/prog_index.m3u8"));
-    urls[4] = new Item(QString("Pусский"), QString("https://liveru.cgtn.com/1000r/prog_index.m3u8"));
-    urls[5] = new Item(QString("Documentary"), QString("https://livedoc.cgtn.com/1000d/prog_index.m3u8"));
+    this->urls = tvVector;
 
     mainLayout = new QStackedLayout();
     mainLayout->setMargin(0);
@@ -66,6 +63,22 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     loadTv(urls[0]);
 }
 
+void MainWindow::initCctvs()
+{    QString authUrl = QString("http://vdn.live.cntv.cn/api2/liveHtml5.do?channel=pa://cctv_p2p_hd%1&client=html5&tsp=%2");
+     time_t timestamp = time(NULL);
+     for(int i=0; i<18;i++)
+     {
+        QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+        connect(manager,SIGNAL(finished(QNetworkReply*)),this,SLOT(requestReceived(QNetworkReply*)));
+
+        Cctv cctv = cctvs[i];
+        qDebug()<<"CCTV auth: "<<authUrl.arg(cctv.code).arg(timestamp);
+        QNetworkRequest request = QNetworkRequest(QUrl(authUrl.arg(cctv.code).arg(timestamp)));
+
+        manager->get(request);
+    }
+}
+
 #ifndef QT_NO_CONTEXTMENU
 void MainWindow::contextMenuEvent(QContextMenuEvent *event)
 {
@@ -95,16 +108,18 @@ void MainWindow::initContextMenu()
         QMenu *tvMenu = contextMenu->addMenu("TV");
         QActionGroup *groups = new QActionGroup(this);
 
-        for(int i=0, len=sizeof(urls) / sizeof(urls[0]); i < len; i++) {
-            Item *url = urls[i];
+        for(int i=0, len=urls.size(); i < len; i++) {
+            Item url = urls[i];
 
-            QAction *action = new QAction(url->getTitle(), this);
+            QAction *action = new QAction(url.getTitle(), this);
             action->setData(i);
             action->setCheckable(true);
             if(i == 0)
                 action->setChecked(true);
             groups->addAction(action);
             tvMenu->addAction(action);
+            if(url.isNeedSeparate())
+                tvMenu->addSeparator();
         }
         connect(tvMenu, SIGNAL(triggered(QAction *)), this, SLOT(switchTv(QAction *)));
 
@@ -128,15 +143,15 @@ bool MainWindow::isPlaying()
 
 void MainWindow::switchTv(QAction *action)
 {
-    Item *url = urls[action->data().toInt()];
+    Item url = urls[action->data().toInt()];
     loadTv(url);
 }
 
-void MainWindow::loadTv(Item *url)
+void MainWindow::loadTv(Item url)
 {
-    mediaPlayer->setMedia(QUrl(url->getUrl()));
-    setWindowTitle("Cgtv Player: " + url->getTitle());
-    qDebug()<<"Switch to tv "<<url->getTitle();
+    mediaPlayer->setMedia(QUrl(url.getUrl()));
+    setWindowTitle("Cgtv Player: " + url.getTitle());
+    qDebug()<<"Switch to tv "<<url.getTitle();
 }
 
 void MainWindow::toggleTopHint()
@@ -346,9 +361,83 @@ void MainWindow::mouseDoubleClickEvent( QMouseEvent * e )
     }
 }
 
+void MainWindow::requestReceived(QNetworkReply *reply)
+{
+    reply->deleteLater();
+
+    if(reply->error() == QNetworkReply::NoError) {
+        // Get the http status code
+        int v = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+        if (v >= 200 && v < 300) // Success
+        {
+             // Here we got the final reply
+            QString replyText = reply->readAll();
+//            qDebug()<<replyText;
+
+             QRegExp rx("\"hls2\":\"([^\"]+)\"");
+            int pos = replyText.indexOf(rx);
+            if(pos >= 0)
+            {
+                QString url = rx.cap(1);
+                qDebug()<<"url: "<<url;
+                for(int i=0; i<18;i++)
+                {
+                    Cctv cctv = cctvs[i];
+                    if(url.indexOf(cctv.code + ".m3u8")>0)
+                    {
+                        qDebug()<<"code: "<<cctv.title<<"\turl: "<<url;
+                        urls.push_back(Item(cctv.title, url));
+                        QAction *tvMenu = contextMenu->actions().at(1);
+                        QAction *action = new QAction(cctv.title, this);
+                        int last = urls.size() - 1;
+                        action->setData(last);
+                        action->setCheckable(true);
+                        tvMenu->menu()->actions().at(0)->actionGroup()->addAction(action);
+                        QList<QAction *> actions = tvMenu->menu()->actions();
+                        int index=actions.size() - 1;
+                        while (index > 0 && !actions.at(index)->isSeparator() && actions.at(index)->text().compare(cctv.title) > 0) {
+                            index--;
+                        }
+                        qDebug()<<"index:\t"<<index;
+                        if(index == actions.size() -1)
+                            tvMenu->menu()->addAction(action);
+                        else
+                            tvMenu->menu()->insertAction(actions.at(index + 1), action);
+                        break;
+                    }
+                }
+            } else {
+                qDebug()<<"Cannot found url";
+            }
+        }
+        else if (v >= 300 && v < 400) // Redirection
+        {
+            // Get the redirection url
+            QUrl newUrl = reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toUrl();
+            // Because the redirection url can be relative,
+            // we have to use the previous one to resolve it
+            newUrl = reply->url().resolved(newUrl);
+
+            QNetworkAccessManager *manager = reply->manager();
+            QNetworkRequest redirection(newUrl);
+            QNetworkReply *newReply = manager->get(redirection);
+
+            return; // to keep the manager for the next request
+        }
+    }
+    else
+    {
+        // Error
+        qDebug()<<reply->errorString();
+    }
+
+    reply->manager()->deleteLater();
+}
+
 void MainWindow::printError(QMediaPlayer::Error error)
 {
     qDebug()<<"Player error: "<<error;
     qDebug()<<"Player status: "<<mediaPlayer->state();
     qDebug()<<"Player MediaStatus: "<<mediaPlayer->mediaStatus();
+    mediaPlayer->play();
 }

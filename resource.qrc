@@ -4,5 +4,6 @@
         <file>resource/pause.png</file>
         <file>resource/play.png</file>
         <file>resource/flash.jpg</file>
+        <file>resource/tv.json</file>
     </qresource>
 </RCC>

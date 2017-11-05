@@ -14,3 +14,13 @@ QString Item::getUrl()
 {
     return url;
 }
+
+void Item::setSeparate(bool separate)
+{
+    this->needSeparate = separate;
+}
+
+bool Item::isNeedSeparate()
+{
+    return needSeparate;
+}

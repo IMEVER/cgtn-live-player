@@ -1,11 +1,15 @@
 #include "player.h"
 #include <QtGui>
 
-Player::Player() : QObject()
+Player::Player(std::vector<Item> tvVector, bool loadCCTV) : QObject()
 {
     playButton = new PlayButton;
     label = new VolumeLabel();
-    mainwWindow = new MainWindow;
+    mainwWindow = new MainWindow(tvVector);
+
+    if(loadCCTV)
+        mainwWindow->initCctvs();
+
     mainwWindow->addVolumeLabel(label->label);
 
     mainwWindow->addPlayButton(playButton->playButton);

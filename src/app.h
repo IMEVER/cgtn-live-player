@@ -7,6 +7,10 @@
 
 class App
 {
+private:
+    std::vector<Item> tvVector;
+    bool loadCCTV = false;
+
 public:
     About *about;
     Player *player;
@@ -16,6 +20,10 @@ public:
     ~App();
     void run();
     void showAbout();
+
+private:
+    void init();
+    void loadTvVector();
 };
 
 #endif // APP_H
