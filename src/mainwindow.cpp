@@ -9,6 +9,7 @@
 #include <time.h>
 #include <QStandardPaths>
 #include <QFile>
+#include "logger.h"
 
 MainWindow::MainWindow(std::vector<Item> tvVector, QWidget *parent) : QMainWindow(parent)
 {
@@ -50,7 +51,7 @@ MainWindow::MainWindow(std::vector<Item> tvVector, QWidget *parent) : QMainWindo
          {
              QSize size = value.toSize();
              //resize(size.width(), size.height());
-             qDebug()<<"Width: "<<size.width()<<", Height: "<<size.height();
+             Logger::instance().log("Width: " + std::to_string(size.width()) + ", Height: " + std::to_string(size.height()));
              mediaPlayer->play();
          }
       });
@@ -64,7 +65,7 @@ MainWindow::MainWindow(std::vector<Item> tvVector, QWidget *parent) : QMainWindo
 }
 
 void MainWindow::initCctvs()
-{    QString authUrl = QString("http://vdn.live.cntv.cn/api2/liveHtml5.do?channel=pa://cctv_p2p_hd%1&client=html5&tsp=%2");
+{    QString authUrl = QString("http://vdn.live.cntv.cn/api2/liveHtml5.do?channel=pa://cctv_p2p_hd%1&client=html5&tsp=%2&_code_=%3");
      time_t timestamp = time(NULL);
      for(int i=0; i<18;i++)
      {
@@ -72,8 +73,8 @@ void MainWindow::initCctvs()
         connect(manager,SIGNAL(finished(QNetworkReply*)),this,SLOT(requestReceived(QNetworkReply*)));
 
         Cctv cctv = cctvs[i];
-        qDebug()<<"CCTV auth: "<<authUrl.arg(cctv.code).arg(timestamp);
-        QNetworkRequest request = QNetworkRequest(QUrl(authUrl.arg(cctv.code).arg(timestamp)));
+        Logger::instance().log("CCTV auth: " + authUrl.arg(cctv.code).arg(timestamp).arg(cctv.code).toStdString());
+        QNetworkRequest request = QNetworkRequest(QUrl(authUrl.arg(cctv.code).arg(timestamp).arg(cctv.code)));
 
         manager->get(request);
     }
@@ -82,7 +83,7 @@ void MainWindow::initCctvs()
 #ifndef QT_NO_CONTEXTMENU
 void MainWindow::contextMenuEvent(QContextMenuEvent *event)
 {
-    qDebug()<<"Right click trigger";
+    Logger::instance().log("Right click trigger", Logger::kLogLevelInfo);
     contextMenu->exec(event->globalPos());
 }
 #endif // QT_NO_CONTEXTMENU
@@ -137,7 +138,7 @@ void MainWindow::initContextMenu()
 
 bool MainWindow::isPlaying()
 {
-    qDebug()<<"Media player state: "<<mediaPlayer->state();
+    Logger::instance().log("Media player state: " + mediaPlayer->state(), Logger::kLogLevelInfo);
     return mediaPlayer->state() == QMediaPlayer::PlayingState;
 }
 
@@ -151,7 +152,7 @@ void MainWindow::loadTv(Item url)
 {
     mediaPlayer->setMedia(QUrl(url.getUrl()));
     setWindowTitle("Cgtv Player: " + url.getTitle());
-    qDebug()<<"Switch to tv "<<url.getTitle();
+    Logger::instance().log("Switch to tv " + url.getTitle().toStdString(), Logger::kLogLevelInfo);
 }
 
 void MainWindow::toggleTopHint()
@@ -170,7 +171,7 @@ void MainWindow::addVolumeLabel(QLabel *label)
 
 void MainWindow::play(bool play)
 {
-    qDebug()<<"toggle play";
+    Logger::instance().log("toggle play");
     if(isPlaying())
     {
         if(!play)
@@ -191,7 +192,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::toogle()
 {
-    qDebug()<<"toggle play";
+    Logger::instance().log("toggle play");
     bool playing = isPlaying();
     if(playing)
     {
@@ -296,8 +297,7 @@ void MainWindow::mousePressEvent(QMouseEvent *event)
     if(event->button() == Qt::LeftButton)
     {
     if(timerId == 0)
-    {
-        //qDebug()<<"click triggered";
+    {    
         pressing = true;
         timerId = startTimer(700);
         current = QDateTime::currentMSecsSinceEpoch();
@@ -372,20 +372,22 @@ void MainWindow::requestReceived(QNetworkReply *reply)
         {
              // Here we got the final reply
             QString replyText = reply->readAll();
-//            qDebug()<<replyText;
+            int i1 = replyText.indexOf("'");
+            int i2 = replyText.indexOf("'", i1 + 1);
+            Logger::instance().log(replyText.mid(replyText.indexOf("'") + 1, i2-i1 - 1).toStdString());
 
-             QRegExp rx("\"hls2\":\"([^\"]+)\"");
+             QRegExp rx("\"hls1\":\"([^\"]+)\"");
             int pos = replyText.indexOf(rx);
             if(pos >= 0)
             {
                 QString url = rx.cap(1);
-                qDebug()<<"url: "<<url;
+                QString authUrl = reply->request().url().url();
                 for(int i=0; i<18;i++)
                 {
                     Cctv cctv = cctvs[i];
-                    if(url.indexOf(cctv.code + ".m3u8")>0)
+                    if(authUrl.endsWith("&_code_=" + cctv.code))
                     {
-                        qDebug()<<"code: "<<cctv.title<<"\turl: "<<url;
+                        Logger::instance().log("code: " + cctv.title.toStdString() + "\turl: " + url.toStdString());
                         urls.push_back(Item(cctv.title, url));
                         QAction *tvMenu = contextMenu->actions().at(1);
                         QAction *action = new QAction(cctv.title, this);
@@ -395,10 +397,9 @@ void MainWindow::requestReceived(QNetworkReply *reply)
                         tvMenu->menu()->actions().at(0)->actionGroup()->addAction(action);
                         QList<QAction *> actions = tvMenu->menu()->actions();
                         int index=actions.size() - 1;
-                        while (index > 0 && !actions.at(index)->isSeparator() && actions.at(index)->text().compare(cctv.title) > 0) {
+                        while (index > 0 && !actions.at(index)->isSeparator() && actions.at(index)->text().replace(" ", "").compare(cctv.title.replace(" ", "")) > 0) {
                             index--;
                         }
-                        qDebug()<<"index:\t"<<index;
                         if(index == actions.size() -1)
                             tvMenu->menu()->addAction(action);
                         else
@@ -407,7 +408,7 @@ void MainWindow::requestReceived(QNetworkReply *reply)
                     }
                 }
             } else {
-                qDebug()<<"Cannot found url";
+                Logger::instance().log("Cannot found url");
             }
         }
         else if (v >= 300 && v < 400) // Redirection
@@ -428,7 +429,7 @@ void MainWindow::requestReceived(QNetworkReply *reply)
     else
     {
         // Error
-        qDebug()<<reply->errorString();
+        Logger::instance().log(reply->errorString().toStdString());
     }
 
     reply->manager()->deleteLater();
@@ -436,8 +437,8 @@ void MainWindow::requestReceived(QNetworkReply *reply)
 
 void MainWindow::printError(QMediaPlayer::Error error)
 {
-    qDebug()<<"Player error: "<<error;
-    qDebug()<<"Player status: "<<mediaPlayer->state();
-    qDebug()<<"Player MediaStatus: "<<mediaPlayer->mediaStatus();
+    Logger::instance().log("Player error: " + error, Logger::kLogLevelError);
+    Logger::instance().log("Player status: " + mediaPlayer->state());
+    Logger::instance().log("Player MediaStatus: " + mediaPlayer->mediaStatus());
     mediaPlayer->play();
 }

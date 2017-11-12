@@ -27,7 +27,8 @@ SOURCES += src/main.cpp\
     src/playbutton.cpp \
     src/volumelabel.cpp \
     src/aboutdialog.cpp \
-    src/item.cpp
+    src/item.cpp \
+    src/logger.cpp
 
 HEADERS  += src/mainwindow.h \
     src/app.h \
@@ -36,7 +37,8 @@ HEADERS  += src/mainwindow.h \
     src/playbutton.h \
     src/volumelabel.h \
     src/aboutdialog.h \
-    src/item.h
+    src/item.h \
+    src/logger.h
 
 DISTFILES +=
 FORMS +=

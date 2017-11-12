@@ -8,6 +8,7 @@
 #include <QJsonValue>
 #include <QJsonArray>
 #include <QJsonObject>
+#include "logger.h"
 
 App::App()
 {
@@ -40,7 +41,7 @@ void App::init()
     QString configPath = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
     QDir dir(configPath);
     QFile file(configPath +  "/tv.json");
-    qDebug()<<"Local config path: "<<configPath<<", name: "<<file.fileName();
+    Logger::instance().log("Local config path: " + configPath.toStdString() + ", name: " + file.fileName().toStdString());
 
     if(!dir.exists())
     {
@@ -65,7 +66,7 @@ void App::loadTvVector()
     QJsonDocument json = QJsonDocument::fromJson(bytearray, &error);
     if(error.error != QJsonParseError::NoError)
     {
-        qDebug()<<"Error occurs when parse json file, err msg: "<<error.errorString();
+        Logger::instance().log("Error occurs when parse json file, err msg: " + error.errorString().toStdString(), Logger::kLogLevelError);
 
         QFile file(":/resource/tv.json");
         json = QJsonDocument::fromJson(file.readAll());
@@ -92,5 +93,5 @@ void App::loadTvVector()
         {
             loadCCTV = true;
         }
-    qDebug()<<"Tvs count: "<<tvVector.size();
+    Logger::instance().log("Tvs count: " + std::to_string(tvVector.size()));
 }
