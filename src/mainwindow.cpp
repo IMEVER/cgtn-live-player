@@ -10,6 +10,7 @@
 #include <QStandardPaths>
 #include <QFile>
 #include "logger.h"
+#include <QClipboard>
 
 MainWindow::MainWindow(std::vector<Item> tvVector, QWidget *parent) : QMainWindow(parent)
 {
@@ -123,6 +124,12 @@ void MainWindow::initContextMenu()
                 tvMenu->addSeparator();
         }
         connect(tvMenu, SIGNAL(triggered(QAction *)), this, SLOT(switchTv(QAction *)));
+
+        contextMenu->addAction("Copy url", this, [=] () {
+            QClipboard *clipboard = QApplication::clipboard();
+            clipboard->setText(mediaPlayer->media().canonicalUrl().url());
+//            QApplication::instance()->sendEvent(clipboard, new QEvent(QEvent::Clipboard));
+        });
 
         contextMenu->addAction("TopHint", this, [=](bool checked){
             toggleTopHint();
@@ -376,6 +383,8 @@ void MainWindow::requestReceived(QNetworkReply *reply)
             int i2 = replyText.indexOf("'", i1 + 1);
             Logger::instance().log(replyText.mid(replyText.indexOf("'") + 1, i2-i1 - 1).toStdString());
 
+            QString cloudName = replyText.contains("LIVE-HLS-CDN-ALI") ? "阿里云" : (replyText.contains("LIVE-HLS-CDN-QQ") ? "腾讯云" : "其他");
+
              QRegExp rx("\"hls1\":\"([^\"]+)\"");
             int pos = replyText.indexOf(rx);
             if(pos >= 0)
@@ -390,7 +399,7 @@ void MainWindow::requestReceived(QNetworkReply *reply)
                         Logger::instance().log("code: " + cctv.title.toStdString() + "\turl: " + url.toStdString());
                         urls.push_back(Item(cctv.title, url));
                         QAction *tvMenu = contextMenu->actions().at(1);
-                        QAction *action = new QAction(cctv.title, this);
+                        QAction *action = new QAction(cctv.title + " (" + cloudName + ")", this);
                         int last = urls.size() - 1;
                         action->setData(last);
                         action->setCheckable(true);
@@ -433,6 +442,13 @@ void MainWindow::requestReceived(QNetworkReply *reply)
     }
 
     reply->manager()->deleteLater();
+}
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    QClipboard *clipboard = QApplication::clipboard();
+    QApplication::instance()->sendEvent(clipboard, new QEvent(QEvent::Clipboard));
+    event->accept();
 }
 
 void MainWindow::printError(QMediaPlayer::Error error)
