@@ -453,8 +453,12 @@ void MainWindow::closeEvent(QCloseEvent *event)
 
 void MainWindow::printError(QMediaPlayer::Error error)
 {
-    Logger::instance().log("Player error: " + error, Logger::kLogLevelError);
-    Logger::instance().log("Player status: " + mediaPlayer->state());
-    Logger::instance().log("Player MediaStatus: " + mediaPlayer->mediaStatus());
+    QString str;
+    QDebug(&str)<<error;
+    Logger::instance().log("Player error: " + str.toStdString(), Logger::kLogLevelError);
+    QDebug(&str)<<mediaPlayer->state();
+    Logger::instance().log("Player status: " + str.toStdString());
+    QDebug(&str)<<mediaPlayer->mediaStatus();
+    Logger::instance().log("Player MediaStatus: " + str.toStdString());
     mediaPlayer->play();
 }
