@@ -44,7 +44,8 @@ protected:
     void contextMenuEvent(QContextMenuEvent *event) override;
 #endif // QT_NO_CONTEXTMENU:w
     void closeEvent(QCloseEvent *event) override;
-
+    void dragEnterEvent(QDragEnterEvent *event);
+    void dropEvent(QDropEvent *event);
 
 private:    
     QMenu *contextMenu;

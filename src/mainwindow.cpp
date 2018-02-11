@@ -11,6 +11,7 @@
 #include <QFile>
 #include "logger.h"
 #include <QClipboard>
+#include <QMimeData>
 
 MainWindow::MainWindow(std::vector<Item> tvVector, QWidget *parent) : QMainWindow(parent)
 {
@@ -63,6 +64,8 @@ MainWindow::MainWindow(std::vector<Item> tvVector, QWidget *parent) : QMainWindo
     initContextMenu();
 
     loadTv(urls[0]);
+
+    setAcceptDrops(true);
 }
 
 void MainWindow::initCctvs()
@@ -85,6 +88,13 @@ void MainWindow::initCctvs()
 void MainWindow::contextMenuEvent(QContextMenuEvent *event)
 {
     Logger::instance().log("Right click trigger", Logger::kLogLevelInfo);
+
+    QClipboard *clipboard = QApplication::clipboard();
+    QString url = clipboard->text(QClipboard::Clipboard);
+    bool hasUrl = !url.isEmpty() && !url.isNull() && url.startsWith("http");
+
+    contextMenu->actions()[2]->setDisabled(!hasUrl);
+
     contextMenu->exec(event->globalPos());
 }
 #endif // QT_NO_CONTEXTMENU
@@ -125,7 +135,17 @@ void MainWindow::initContextMenu()
         }
         connect(tvMenu, SIGNAL(triggered(QAction *)), this, SLOT(switchTv(QAction *)));
 
-        contextMenu->addAction("Copy url", this, [=] () {
+        contextMenu->addAction("Paste online url", this, [=](){
+            QClipboard *clipboard = QApplication::clipboard();
+            QString url = clipboard->text(QClipboard::Clipboard);
+            if(!url.isEmpty() && !url.isNull()) {
+                mediaPlayer->setMedia(QUrl(url));
+                Logger::instance().log("Switch to tv " + url.toStdString(), Logger::kLogLevelInfo);
+            }
+        });
+
+
+        contextMenu->addAction("Copy current url", this, [=] () {
             QClipboard *clipboard = QApplication::clipboard();
             clipboard->setText(mediaPlayer->media().canonicalUrl().url());
 //            QApplication::instance()->sendEvent(clipboard, new QEvent(QEvent::Clipboard));
@@ -145,7 +165,6 @@ void MainWindow::initContextMenu()
 
 bool MainWindow::isPlaying()
 {
-    Logger::instance().log("Media player state: " + mediaPlayer->state(), Logger::kLogLevelInfo);
     return mediaPlayer->state() == QMediaPlayer::PlayingState;
 }
 
@@ -383,7 +402,17 @@ void MainWindow::requestReceived(QNetworkReply *reply)
             int i2 = replyText.indexOf("'", i1 + 1);
             Logger::instance().log(replyText.mid(replyText.indexOf("'") + 1, i2-i1 - 1).toStdString());
 
-            QString cloudName = replyText.contains("LIVE-HLS-CDN-ALI") ? "阿里云" : (replyText.contains("LIVE-HLS-CDN-QQ") ? "腾讯云" : "其他");
+            QString cloudName;
+            if(replyText.contains("LIVE-HLS-CDN-ALI"))
+                cloudName = "阿里云";
+            else if(replyText.contains("LIVE-HLS-CDN-QQ"))
+                cloudName = "腾讯云";
+            else if(replyText.contains("LIVE-HLS-CDN-DN"))
+                cloudName = "帝联云";
+            else if(replyText.contains("LIVE-HLS-CDN-CNC"))
+                cloudName = "网宿";
+            else
+                cloudName = "其他";
 
              QRegExp rx("\"hls1\":\"([^\"]+)\"");
             int pos = replyText.indexOf(rx);
@@ -449,6 +478,22 @@ void MainWindow::closeEvent(QCloseEvent *event)
     QClipboard *clipboard = QApplication::clipboard();
     QApplication::instance()->sendEvent(clipboard, new QEvent(QEvent::Clipboard));
     event->accept();
+}
+
+void MainWindow::dragEnterEvent(QDragEnterEvent *event)
+{
+    if (event->mimeData()->hasText())
+            event->acceptProposedAction();
+}
+
+void MainWindow::dropEvent(QDropEvent *event)
+{
+    if(event->mimeData()->hasText()) {
+        QUrl url = QUrl(event->mimeData()->text());
+         mediaPlayer->setMedia(url);
+         Logger::instance().log("Switch to tv " + url.toString().toStdString(), Logger::kLogLevelInfo);
+    }
+
 }
 
 void MainWindow::printError(QMediaPlayer::Error error)
