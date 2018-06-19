@@ -3,6 +3,9 @@ A qt client for cgtn live player.
 * [cgtn website](http://www.cgtn.com)
 * [cgtn stream](https://live.cgtn.com/manifest.m3u8)
 
+Version 2.1.0
+ Add single application support by submodule from [itay-grudev/SingleApplication](https://github.com/itay-grudev/SingleApplication/tree/c03d32ec17b45babe95888f8e5d3ad1cbf6c5683)
+
 Support six language video
 1. English
 2. Español
