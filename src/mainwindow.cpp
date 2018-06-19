@@ -4,6 +4,7 @@
 #include <QVBoxLayout>
 #include <QApplication>
 #include <qapplication.h>
+#include <singleapplication.h>
 #include <QStackedLayout>
 #include <QEvent>
 #include <time.h>
@@ -66,6 +67,18 @@ MainWindow::MainWindow(std::vector<Item> tvVector, QWidget *parent) : QMainWindo
     loadTv(urls[0]);
 
     setAcceptDrops(true);
+
+    SingleApplication *app = (SingleApplication *)QApplication::instance();
+    Logger::instance().log("App name: " + app->applicationName().toStdString());
+    QObject::connect(app, SIGNAL(instanceStarted()), this, SLOT(toFront()));
+}
+
+void MainWindow::toFront()
+{
+   Logger::instance().log("To Front called");
+   raise();
+   show();
+   activateWindow();
 }
 
 void MainWindow::initCctvs()
@@ -499,11 +512,10 @@ void MainWindow::dropEvent(QDropEvent *event)
 void MainWindow::printError(QMediaPlayer::Error error)
 {
     QString str;
-    QDebug(&str)<<error;
-    Logger::instance().log("Player error: " + str.toStdString(), Logger::kLogLevelError);
-    QDebug(&str)<<mediaPlayer->state();
-    Logger::instance().log("Player status: " + str.toStdString());
-    QDebug(&str)<<mediaPlayer->mediaStatus();
-    Logger::instance().log("Player MediaStatus: " + str.toStdString());
+    QDebug(&str)<<"Player error: "<<error;
+    QDebug(&str)<<"\r\n\tPlayer status: "<<mediaPlayer->state();
+    QDebug(&str)<<"\r\n\tPlayer MediaStatus: "<<mediaPlayer->mediaStatus();
+    QDebug(&str)<<"\r\n\tSrc: "<<mediaPlayer->media().canonicalUrl().url();
+    Logger::instance().log(str.toStdString(), Logger::kLogLevelError);
     mediaPlayer->play();
 }

@@ -10,6 +10,10 @@ QT       += core gui multimediawidgets multimedia gui-private
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
+include(singleapplication/singleapplication.pri)
+
+DEFINES += QAPPLICATION_CLASS=QApplication
+
 TARGET = cgtn-live-player
 TEMPLATE = app
 

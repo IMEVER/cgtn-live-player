@@ -39,6 +39,9 @@ public:
     void resizeEvent(QResizeEvent * event);
     void initCctvs();
 
+public slots:
+    void toFront();
+
 protected:
 #ifndef QT_NO_CONTEXTMENU
     void contextMenuEvent(QContextMenuEvent *event) override;

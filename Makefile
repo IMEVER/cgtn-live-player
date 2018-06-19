@@ -1,5 +1,6 @@
 .PHONY:deb clean
 
+VERSION=2.1.0
 PREFIX = /usr
 DESTDIR = dist/
 BUILDDIR = build
@@ -21,4 +22,4 @@ clean:
 
 deb:clean install
 	cd ${DESTDIR};\
-	fakeroot dpkg -b ${BUILDDIR} cgtn-live-player_2.0.1.deb
+	fakeroot dpkg -b ${BUILDDIR} cgtn-live-player_${VERSION}.deb

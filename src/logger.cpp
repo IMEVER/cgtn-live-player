@@ -81,6 +81,8 @@ void Logger::logHelper(const string &inMessage, const string &inLogLevel)
 
     strftime(buffer,sizeof(buffer),"%Y-%m-%d %H:%M:%S",timeinfo);
     string str(buffer);
-//    qDebug()<<QString::fromStdString(str + " [" + inLogLevel + "] " + inMessage)<<endl;
+#ifdef QT_DEBUG
+    qDebug()<<QString::fromStdString(str + " [" + inLogLevel + "] " + inMessage)<<endl;
+#endif
     mOutputStream<<str<<" ["<<inLogLevel<<"] "<<inMessage<<endl;
 }

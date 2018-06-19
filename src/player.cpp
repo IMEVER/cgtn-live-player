@@ -1,5 +1,7 @@
 #include "player.h"
 #include <QtGui>
+#include <QApplication>
+#include <singleapplication.h>
 
 Player::Player(std::vector<Item> tvVector, bool loadCCTV) : QObject()
 {
@@ -23,6 +25,8 @@ Player::Player(std::vector<Item> tvVector, bool loadCCTV) : QObject()
     connect(playButton, SIGNAL(stateChange(bool)), this, SLOT(stateChanged(bool)));
 
     connect(mainwWindow, SIGNAL(volumeChanged(int)), label, SLOT(volumeChanged(int)));
+
+
 }
 
 Player::~Player()
