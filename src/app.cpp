@@ -16,7 +16,7 @@ App::App()
     loadTvVector();
 
     about = new About;
-    player = new Player(tvVector, loadCCTV);
+    player = new Player(tvVector);
     player->bind(about);
 }
 
@@ -87,11 +87,6 @@ void App::loadTvVector()
            } else {
                tvVector.push_back(Item(item.value("title").toString(), item.value("url").toString()));
            }
-        }
-
-        if(data.value("cctv").toBool())
-        {
-            loadCCTV = true;
         }
     Logger::instance().log("Tvs count: " + std::to_string(tvVector.size()));
 }

@@ -9,7 +9,6 @@ class App
 {
 private:
     std::vector<Item> tvVector;
-    bool loadCCTV = false;
 
 public:
     About *about;

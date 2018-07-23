@@ -3,23 +3,24 @@
 #include <QApplication>
 #include <singleapplication.h>
 
-Player::Player(std::vector<Item> tvVector, bool loadCCTV) : QObject()
+Player::Player(std::vector<Item> tvVector) : QObject()
 {
     playButton = new PlayButton;
     label = new VolumeLabel();
     mainwWindow = new MainWindow(tvVector);
 
-    if(loadCCTV)
-        mainwWindow->initCctvs();
-
     mainwWindow->addVolumeLabel(label->label);
 
-    mainwWindow->addPlayButton(playButton->playButton);
+    mainwWindow->addPlayButton(playButton);
     connect(mainwWindow, SIGNAL(windowResize(QSize )), this, SLOT(resize(QSize )));
     mainwWindow->connect(mainwWindow, &MainWindow::toggleTrigger, this, [=](bool isPlaying){
         //resize(mainwWindow->size());
         label->hide();
         playButton->setChecked(isPlaying);
+        if(isPlaying)
+            playButton->show();
+        else
+            playButton->hide();
     });
 
     connect(playButton, SIGNAL(stateChange(bool)), this, SLOT(stateChanged(bool)));

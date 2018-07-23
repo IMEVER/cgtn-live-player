@@ -16,7 +16,7 @@ public:
     MainWindow *mainwWindow;
 
 public:
-     Player(std::vector<Item> tvVector, bool loadCCTV);
+     Player(std::vector<Item> tvVector);
     ~Player();
     void run();
     void addWidget(QWidget *widget);

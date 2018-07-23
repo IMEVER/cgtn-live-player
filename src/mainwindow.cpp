@@ -56,6 +56,7 @@ MainWindow::MainWindow(std::vector<Item> tvVector, QWidget *parent) : QMainWindo
              //resize(size.width(), size.height());
              Logger::instance().log("Width: " + std::to_string(size.width()) + ", Height: " + std::to_string(size.height()));
              mediaPlayer->play();
+             playBtn->setChecked(false);
          }
       });
      QObject::connect(mediaPlayer, SIGNAL(error(QMediaPlayer::Error)), this, SLOT(printError(QMediaPlayer::Error)));
@@ -81,22 +82,6 @@ void MainWindow::toFront()
    activateWindow();
 }
 
-void MainWindow::initCctvs()
-{    QString authUrl = QString("http://vdn.live.cntv.cn/api2/liveHtml5.do?channel=pa://cctv_p2p_hd%1&client=html5&tsp=%2&_code_=%3");
-     time_t timestamp = time(NULL);
-     for(int i=0; i<18;i++)
-     {
-        QNetworkAccessManager *manager = new QNetworkAccessManager(this);
-        connect(manager,SIGNAL(finished(QNetworkReply*)),this,SLOT(requestReceived(QNetworkReply*)));
-
-        Cctv cctv = cctvs[i];
-        Logger::instance().log("CCTV auth: " + authUrl.arg(cctv.code).arg(timestamp).arg(cctv.code).toStdString());
-        QNetworkRequest request = QNetworkRequest(QUrl(authUrl.arg(cctv.code).arg(timestamp).arg(cctv.code)));
-
-        manager->get(request);
-    }
-}
-
 #ifndef QT_NO_CONTEXTMENU
 void MainWindow::contextMenuEvent(QContextMenuEvent *event)
 {
@@ -112,11 +97,10 @@ void MainWindow::contextMenuEvent(QContextMenuEvent *event)
 }
 #endif // QT_NO_CONTEXTMENU
 
-void MainWindow::addPlayButton(QPushButton *playButton)
+void MainWindow::addPlayButton(PlayButton *playButton)
 {
-    mainLayout->addWidget(playButton);
-    playButton->raise();
-    playButton->hide();
+    this->playBtn = playButton;
+    mainLayout->addWidget(playButton->playButton);
 }
 
 void MainWindow::initContextMenu()
@@ -281,11 +265,13 @@ bool MainWindow::event(QEvent *event)
                          volume = 100;
                      mediaPlayer->setVolume(volume);
                  }
+                playBtn->hide();
                 emit volumeChanged(volume);
             }
         }
         else if(keyEvent->key() == Qt::Key_Down)
         {
+
             if(isPlaying()) {
                 int volume = mediaPlayer->volume();
                 if(volume > 0) {
@@ -294,6 +280,7 @@ bool MainWindow::event(QEvent *event)
                         volume = 0;
                     mediaPlayer->setVolume(volume);
                 }
+                playBtn->hide();
                 emit volumeChanged(volume);
             }
         }
@@ -308,9 +295,32 @@ bool MainWindow::event(QEvent *event)
         {
                 toggleTopHint();
         }
+        return false;
     }
     return QMainWindow::event(event);
 }
+
+#ifndef QT_NO_WHEELEVENT
+    void MainWindow::wheelEvent(QWheelEvent *event)
+    {
+        if(isPlaying()) {
+            int volume = mediaPlayer->volume();
+                if(event->delta() < 0) {
+                        volume -= 5;
+                } else {
+                        volume += 5;
+                }
+                if(volume < 0)
+                    volume = 0;
+                if(volume > 100)
+                    volume = 100;
+                mediaPlayer->setVolume(volume);
+            playBtn->hide();
+            emit volumeChanged(volume);
+        }
+    }
+
+#endif
 
 void MainWindow::resizeEvent(QResizeEvent *event)
 {
@@ -335,16 +345,16 @@ void MainWindow::mousePressEvent(QMouseEvent *event)
 {
     if(event->button() == Qt::LeftButton)
     {
-    if(timerId == 0)
-    {    
-        pressing = true;
-        timerId = startTimer(700);
-        current = QDateTime::currentMSecsSinceEpoch();
-    } else {
-        killTimer(timerId);
-        timerId = 0;
-    }
-    mLastMousePosition = event->globalPos();
+        if(timerId == 0)
+        {
+            pressing = true;
+            timerId = startTimer(700);
+            current = QDateTime::currentMSecsSinceEpoch();
+        } else {
+            killTimer(timerId);
+            timerId = 0;
+        }
+        mLastMousePosition = event->globalPos();
     }
 }
 
@@ -400,92 +410,6 @@ void MainWindow::mouseDoubleClickEvent( QMouseEvent * e )
     }
 }
 
-void MainWindow::requestReceived(QNetworkReply *reply)
-{
-    reply->deleteLater();
-
-    if(reply->error() == QNetworkReply::NoError) {
-        // Get the http status code
-        int v = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-        if (v >= 200 && v < 300) // Success
-        {
-             // Here we got the final reply
-            QString replyText = reply->readAll();
-            int i1 = replyText.indexOf("'");
-            int i2 = replyText.indexOf("'", i1 + 1);
-            Logger::instance().log(replyText.mid(replyText.indexOf("'") + 1, i2-i1 - 1).toStdString());
-
-            QString cloudName;
-            if(replyText.contains("LIVE-HLS-CDN-ALI"))
-                cloudName = "阿里云";
-            else if(replyText.contains("LIVE-HLS-CDN-QQ"))
-                cloudName = "腾讯云";
-            else if(replyText.contains("LIVE-HLS-CDN-DN"))
-                cloudName = "帝联云";
-            else if(replyText.contains("LIVE-HLS-CDN-CNC"))
-                cloudName = "网宿";
-            else
-                cloudName = "其他";
-
-             QRegExp rx("\"hls1\":\"([^\"]+)\"");
-            int pos = replyText.indexOf(rx);
-            if(pos >= 0)
-            {
-                QString url = rx.cap(1);
-                QString authUrl = reply->request().url().url();
-                for(int i=0; i<18;i++)
-                {
-                    Cctv cctv = cctvs[i];
-                    if(authUrl.endsWith("&_code_=" + cctv.code))
-                    {
-                        Logger::instance().log("code: " + cctv.title.toStdString() + "\turl: " + url.toStdString());
-                        urls.push_back(Item(cctv.title, url));
-                        QAction *tvMenu = contextMenu->actions().at(1);
-                        QAction *action = new QAction(cctv.title + " (" + cloudName + ")", this);
-                        int last = urls.size() - 1;
-                        action->setData(last);
-                        action->setCheckable(true);
-                        tvMenu->menu()->actions().at(0)->actionGroup()->addAction(action);
-                        QList<QAction *> actions = tvMenu->menu()->actions();
-                        int index=actions.size() - 1;
-                        while (index > 0 && !actions.at(index)->isSeparator() && actions.at(index)->text().replace(" ", "").compare(cctv.title.replace(" ", "")) > 0) {
-                            index--;
-                        }
-                        if(index == actions.size() -1)
-                            tvMenu->menu()->addAction(action);
-                        else
-                            tvMenu->menu()->insertAction(actions.at(index + 1), action);
-                        break;
-                    }
-                }
-            } else {
-                Logger::instance().log("Cannot found url");
-            }
-        }
-        else if (v >= 300 && v < 400) // Redirection
-        {
-            // Get the redirection url
-            QUrl newUrl = reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toUrl();
-            // Because the redirection url can be relative,
-            // we have to use the previous one to resolve it
-            newUrl = reply->url().resolved(newUrl);
-
-            QNetworkAccessManager *manager = reply->manager();
-            QNetworkRequest redirection(newUrl);
-            QNetworkReply *newReply = manager->get(redirection);
-
-            return; // to keep the manager for the next request
-        }
-    }
-    else
-    {
-        // Error
-        Logger::instance().log(reply->errorString().toStdString());
-    }
-
-    reply->manager()->deleteLater();
-}
-
 void MainWindow::closeEvent(QCloseEvent *event)
 {
     QClipboard *clipboard = QApplication::clipboard();
@@ -509,6 +433,17 @@ void MainWindow::dropEvent(QDropEvent *event)
 
 }
 
+void MainWindow::enterEvent(QEvent *event)
+{
+        this->playBtn->show();
+}
+
+void MainWindow::leaveEvent(QEvent *event)
+{
+    if(isPlaying())
+        this->playBtn->hide();
+}
+
 void MainWindow::printError(QMediaPlayer::Error error)
 {
     QString str;
@@ -518,4 +453,5 @@ void MainWindow::printError(QMediaPlayer::Error error)
     QDebug(&str)<<"\r\n\tSrc: "<<mediaPlayer->media().canonicalUrl().url();
     Logger::instance().log(str.toStdString(), Logger::kLogLevelError);
     mediaPlayer->play();
+    playBtn->setChecked(true);
 }

@@ -6,6 +6,7 @@ PlayButton::PlayButton() : QObject()
     point = QPoint();
     playButton = new QPushButton();
     playButton->setFixedSize(QSize(128, 128));
+    playButton->setFocusPolicy(Qt::NoFocus);
 
     pauseMap = new QPixmap();
     pauseMap->load(":/resource/pause.png");
@@ -14,7 +15,7 @@ PlayButton::PlayButton() : QObject()
 
 //    playButton->setPixmap(*pauseMap);
 //    playButton->setAlignment(Qt::AlignCenter);
-    playButton->setStyleSheet("border-image:url(:/resource/play.png); border: 1px solid black; border-radius: 10px; font-size: 80px; color: white; background-color: rgba(0,0,0, 250)");
+    playButton->setStyleSheet("border-image:url(:/resource/play.png); border: 1px solid black; border-radius: 10px; font-size: 80px; color: white; background-color: rgba(0,0,0, 0)");
 
     connect(playButton, &QPushButton::clicked, this, [=](bool isChecked){
         qDebug()<<checked;
@@ -43,23 +44,29 @@ void PlayButton::moveTo(int x, int y)
 void PlayButton::setChecked(bool checked)
 {
 //    qDebug()<<"click triggered occurs"<<playButton->isChecked();
-    if(this->checked == checked)
-        return;
 
     this->checked = checked;
 //    qDebug()<<"click triggered occurs"<<playButton->isChecked();
     if(checked)
     {
-        playButton->raise();
         playButton->setStyleSheet("border-image:url(:/resource/play.png); border: 1px solid black; border-radius: 10px; font-size: 80px; color: white; background-color: rgba(0,0,0,0)");
-        playButton->show();
-        playButton->move(point);
     }
     else
     {
         playButton->setStyleSheet("border-image:url(:/resource/pause.png); border: 1px solid black; border-radius: 10px; font-size: 80px; color: white; background-color: rgba(0,0,0,0)");
-        playButton->hide();
     }
+}
+
+void PlayButton::show()
+{
+    playButton->raise();
+    playButton->show();
+    playButton->move(point);
+}
+
+void PlayButton::hide()
+{
+    playButton->hide();
 }
 
 bool PlayButton::isPaused()

@@ -19,6 +19,8 @@ public:
     QPushButton *playButton;
     void moveTo(int x, int y);
     bool isPaused();
+    void show();
+    void hide();
 
 signals:
     void stateChange(bool checked = false);
