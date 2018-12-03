@@ -29,15 +29,15 @@ public:
     void addVolumeLabel(QLabel *label);
 
     void play(bool play);
-    bool event(QEvent* event);
-    void mouseDoubleClickEvent( QMouseEvent * e );
-    void resizeEvent(QResizeEvent * event);
+    bool event(QEvent* event) override;
+    void mouseDoubleClickEvent( QMouseEvent * e ) override;
+    void resizeEvent(QResizeEvent * event) override;
 #ifndef QT_NO_WHEELEVENT
-    void wheelEvent(QWheelEvent *event);
+    void wheelEvent(QWheelEvent *event) override;
 #endif
 
-    void enterEvent(QEvent *event);
-    void leaveEvent(QEvent *event);
+    void enterEvent(QEvent *event) override;
+    void leaveEvent(QEvent *event) override;
 public slots:
     void toFront();
 
@@ -46,8 +46,8 @@ protected:
     void contextMenuEvent(QContextMenuEvent *event) override;
 #endif // QT_NO_CONTEXTMENU:w
     void closeEvent(QCloseEvent *event) override;
-    void dragEnterEvent(QDragEnterEvent *event);
-    void dropEvent(QDropEvent *event);
+    void dragEnterEvent(QDragEnterEvent *event) override;
+    void dropEvent(QDropEvent *event) override;
 
 private:    
     QMenu *contextMenu;
@@ -66,10 +66,10 @@ private:
     bool isPlaying();
     void toogle();
     void toggleTopHint();
-    void mousePressEvent(QMouseEvent *event);
-    void mouseMoveEvent(QMouseEvent *event);
-    void mouseReleaseEvent(QMouseEvent *event);
-    void timerEvent(QTimerEvent *event);
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
+    void timerEvent(QTimerEvent *event) override;
     void loadTv(Item url);
 
 signals:

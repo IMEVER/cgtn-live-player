@@ -59,6 +59,12 @@ MainWindow::MainWindow(std::vector<Item> tvVector, QWidget *parent) : QMainWindo
              playBtn->setChecked(false);
          }
       });
+     connect(mediaPlayer, static_cast<void(QMediaPlayer::*)(bool bavial)>(&QMediaPlayer::videoAvailableChanged), [=](bool bavial){
+         if(bavial) {
+             mediaPlayer->play();
+             playBtn->setChecked(false);
+         }
+     });
      QObject::connect(mediaPlayer, SIGNAL(error(QMediaPlayer::Error)), this, SLOT(printError(QMediaPlayer::Error)));
 
     setMinimumSize(QSize(410, 280));
@@ -173,9 +179,9 @@ void MainWindow::switchTv(QAction *action)
 
 void MainWindow::loadTv(Item url)
 {
-    mediaPlayer->setMedia(QUrl(url.getUrl()));
-    setWindowTitle("Cgtv Player: " + url.getTitle());
-    Logger::instance().log("Switch to tv " + url.getTitle().toStdString(), Logger::kLogLevelInfo);
+    mediaPlayer->setMedia(QMediaContent(QUrl(url.getUrl())));
+    setWindowTitle("Cgtv Player tv name: " + url.getTitle());
+    Logger::instance().log("Switch to tv " + url.getTitle().toStdString() + "\t" + url.getUrl().toStdString(), Logger::kLogLevelInfo);
 }
 
 void MainWindow::toggleTopHint()
