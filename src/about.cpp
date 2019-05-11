@@ -26,7 +26,7 @@ void About::init()
     about->setProductLink("https://github.com/IMEVER/cgtn-live-player");
     about->setWebsiteLink("http://www.imever.me");
     about->setWebsiteName("IMEVER");
-    about->setVersion("3.1.0");
+    about->setVersion("3.1.1");
     about->setDescription("A cgtn live player for deepin user");
 }
 
