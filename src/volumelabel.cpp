@@ -69,6 +69,7 @@ void VolumeLabel::volumeChanged(int volume)
 void VolumeLabel::timerEvent(QTimerEvent *event)
 {
     label->hide();
+    timerId = 0;
 }
 
 void VolumeLabel::hide()

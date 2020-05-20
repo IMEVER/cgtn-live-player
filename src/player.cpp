@@ -1,6 +1,7 @@
 #include "player.h"
 #include <QtGui>
 #include <QApplication>
+#include <QDesktopWidget>
 #include <singleapplication.h>
 
 Player::Player(std::vector<Item> tvVector) : QObject()
@@ -39,6 +40,7 @@ Player::~Player()
 
 void Player::run()
 {
+    mainwWindow->move(QApplication::desktop()->screen()->rect().center() - mainwWindow->rect().center());
     mainwWindow->show();
 //    QRect r = mainwWindow->geometry();
 //    r.moveCenter(QApplication::desktop()->availableGeometry().center());

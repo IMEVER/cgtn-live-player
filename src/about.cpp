@@ -17,17 +17,17 @@ void About::init()
 
     about = new AboutDialog;
     about->setAttribute(Qt::WA_ShowModal, true);
-    about->setWindowTitle("About");
+    about->setWindowTitle("关于");
     QIcon icon;
     icon.addPixmap(pixmap, QIcon::Normal);
 
     about->setProductIcon(icon);
-    about->setProductName("Cgtn live player");
+    about->setProductName("央视外语频道播放器");
     about->setProductLink("https://github.com/IMEVER/cgtn-live-player");
     about->setWebsiteLink("http://www.imever.me");
     about->setWebsiteName("IMEVER");
     about->setVersion("3.1.1");
-    about->setDescription("A cgtn live player for deepin user");
+    about->setDescription("央视外语频道播放器");
 }
 
 void About::show()

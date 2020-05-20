@@ -10,8 +10,9 @@ class PlayButton : public QObject
 private:
     QPoint point;
     bool checked;
-    QPixmap *pauseMap;
-    QPixmap *playMap;
+    //QPixmap *pauseMap;
+    //QPixmap *playMap;
+    int timeId;
 
 public:
     PlayButton();
@@ -21,6 +22,9 @@ public:
     bool isPaused();
     void show();
     void hide();
+
+private:
+    void timerEvent(QTimerEvent *event);
 
 signals:
     void stateChange(bool checked = false);

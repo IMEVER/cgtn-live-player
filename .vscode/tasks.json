@@ -1,0 +1,38 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "deb",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "deb"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "build",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "build"
+            ]
+        },
+        {
+            "label": "build debug",
+            "type": "shell",
+            "options": {
+                //"cwd": "${workspaceFolder}/build"
+            },
+            "command": "rm -rf build && mkdir build && cd build && qmake -o Makefile ../cgtn.pro -spec linux-clang CONFIG+=debug CONFIG+=qml_debug && make"
+        },
+        {
+            "label": "clean",
+            "type": "shell",
+            "command": "make clean"
+        }
+    ]
+}

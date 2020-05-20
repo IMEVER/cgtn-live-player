@@ -1,9 +1,9 @@
 package: cgtn-live-player
-version: 3.1.1
+version: 3.1.2
 architecture: amd64
 Maintainer: IMEVER <Hobart_Tian@imever.me>
-description: Cgtn-live-player is a live video player for www.cgtn.com
+description: 央视外语频道的播放器
 Section: video
 Priority: optional
-Installed-Size:47
+Installed-Size:
 depends: libqgsttools-p1

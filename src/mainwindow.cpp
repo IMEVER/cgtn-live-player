@@ -23,6 +23,8 @@ MainWindow::MainWindow(std::vector<Item> tvVector, QWidget *parent) : QMainWindo
     mainLayout->setMargin(0);
     mainLayout->setStackingMode(QStackedLayout::StackAll);
 
+
+
 //    QPixmap bkgnd(":/resource/flash.jpg");
 //    bkgnd = bkgnd.scaled(this->size(), Qt::KeepAspectRatioByExpanding);
 //    QPalette palette;
@@ -31,22 +33,26 @@ MainWindow::MainWindow(std::vector<Item> tvVector, QWidget *parent) : QMainWindo
 
      QVideoWidget *_videoWidget=new QVideoWidget;
      _videoWidget->setAspectRatioMode(Qt::KeepAspectRatio);
-     mainLayout->addWidget(_videoWidget);
+     mainLayout->addWidget(_videoWidget);_videoWidget->setMouseTracking(true);
 
      QWidget *centralWidget = new QWidget(this);
      centralWidget->setStyleSheet("background-color: black");
      centralWidget->setLayout(mainLayout);
      setCentralWidget(centralWidget);
 
+    setMouseTracking(true);
+    this->centralWidget()->setMouseTracking(true);
+//    setWindowOpacity(0.8);
+//    setAttribute(Qt::WA_TranslucentBackground);
      //videoWidget->setSource(&mediaPlayer);
 
-     mediaPlayer = new QMediaPlayer(0, (QMediaPlayer::StreamPlayback));
+     mediaPlayer = new QMediaPlayer(nullptr, (QMediaPlayer::StreamPlayback));
      mediaPlayer->setPlaybackRate(1);
      mediaPlayer->setVideoOutput(_videoWidget);
      //mediaPlayer->setMedia(QUrl(urls[0]->getUrl()));
      mediaPlayer->setVolume(50);
 
-     ratio = (qreal)404.7/720;
+     ratio = static_cast<qreal>(404.7)/720;
 
      connect(mediaPlayer, static_cast<void(QMediaObject::*)(const QString &, const QVariant &)>(&QMediaObject::metaDataChanged),
          [=](const QString &key, const QVariant &value){
@@ -63,19 +69,24 @@ MainWindow::MainWindow(std::vector<Item> tvVector, QWidget *parent) : QMainWindo
          if(bavial) {
              mediaPlayer->play();
              playBtn->setChecked(false);
+         } else {
+            mediaPlayer->pause();
+            playBtn->setChecked(true);
+            playBtn->show();
          }
      });
      QObject::connect(mediaPlayer, SIGNAL(error(QMediaPlayer::Error)), this, SLOT(printError(QMediaPlayer::Error)));
 
     setMinimumSize(QSize(410, 280));
     resize(720, 405);
+
     initContextMenu();
 
     loadTv(urls[0]);
 
     setAcceptDrops(true);
 
-    SingleApplication *app = (SingleApplication *)QApplication::instance();
+    SingleApplication *app = static_cast<SingleApplication *>(QApplication::instance());
     Logger::instance().log("App name: " + app->applicationName().toStdString());
     QObject::connect(app, SIGNAL(instanceStarted()), this, SLOT(toFront()));
 }
@@ -107,23 +118,24 @@ void MainWindow::addPlayButton(PlayButton *playButton)
 {
     this->playBtn = playButton;
     mainLayout->addWidget(playButton->playButton);
+    this->playBtn->hide();
 }
 
 void MainWindow::initContextMenu()
 {
     contextMenu = new QMenu(this);
-        QMenu *shortMenu = contextMenu->addMenu("ShortCut Key");
-        shortMenu->addAction("Up | Down => Change volume");
-        shortMenu->addAction("F | DbClick => Toogle fullscreen");
-        shortMenu->addAction("F11 => Enter fullscreen");
-        shortMenu->addAction("Esc => Exit fullscreen");
-        shortMenu->addAction("P | Space | Click => Toogle play and pause");
-        shortMenu->addAction("M => Mute");
+        QMenu *shortMenu = contextMenu->addMenu("快捷键");
+        shortMenu->addAction("Up | Down => 音量调节");
+        shortMenu->addAction("F | DbClick => 全屏切换");
+        shortMenu->addAction("F11 => 进入全屏");
+        shortMenu->addAction("Esc => 退出全屏");
+        shortMenu->addAction("P | Space | Click => 暂停播放");
+        shortMenu->addAction("M => 静音");
 
-        QMenu *tvMenu = contextMenu->addMenu("TV");
+        QMenu *tvMenu = contextMenu->addMenu("电台");
         QActionGroup *groups = new QActionGroup(this);
 
-        for(int i=0, len=urls.size(); i < len; i++) {
+        for(int i=0, len=static_cast<int>(urls.size()); i < len; i++) {
             Item url = urls[i];
 
             QAction *action = new QAction(url.getTitle(), this);
@@ -138,7 +150,7 @@ void MainWindow::initContextMenu()
         }
         connect(tvMenu, SIGNAL(triggered(QAction *)), this, SLOT(switchTv(QAction *)));
 
-        contextMenu->addAction("Paste online url", this, [=](){
+        contextMenu->addAction("粘贴在线播放地址", this, [=](){
             QClipboard *clipboard = QApplication::clipboard();
             QString url = clipboard->text(QClipboard::Clipboard);
             if(!url.isEmpty() && !url.isNull()) {
@@ -148,21 +160,21 @@ void MainWindow::initContextMenu()
         });
 
 
-        contextMenu->addAction("Copy current url", this, [=] () {
+        contextMenu->addAction("拷贝当前播放地址", this, [=] () {
             QClipboard *clipboard = QApplication::clipboard();
             clipboard->setText(mediaPlayer->media().canonicalUrl().url());
 //            QApplication::instance()->sendEvent(clipboard, new QEvent(QEvent::Clipboard));
         });
 
-        contextMenu->addAction("TopHint", this, [=](bool checked){
+        contextMenu->addAction("提示", this, [=](bool checked){
             toggleTopHint();
         })->setCheckable(true);
 
-        contextMenu->addAction("About", this, [=](){
+        contextMenu->addAction("关于", this, [=](){
             emit menuTrigger(1);
         });
 
-        contextMenu->addAction("Exit", qApp, SLOT(quit()));
+        contextMenu->addAction("退出", qApp, SLOT(quit()));
         contextMenu->setStyleSheet("border-radius: 5px; background-color: grey");
 }
 
@@ -180,7 +192,7 @@ void MainWindow::switchTv(QAction *action)
 void MainWindow::loadTv(Item url)
 {
     mediaPlayer->setMedia(QMediaContent(QUrl(url.getUrl())));
-    setWindowTitle("Cgtv Player tv name: " + url.getTitle());
+    setWindowTitle("央视外语频道: " + url.getTitle());
     Logger::instance().log("Switch to tv " + url.getTitle().toStdString() + "\t" + url.getUrl().toStdString(), Logger::kLogLevelInfo);
 }
 
@@ -332,8 +344,8 @@ void MainWindow::resizeEvent(QResizeEvent *event)
 {
 
     QSize windowSize = size();
-    QSize oldSize = event->oldSize();
-    QSize newSize = event->size();
+//    QSize oldSize = event->oldSize();
+//    QSize newSize = event->size();
     QSize fixedSize(windowSize.width(), windowSize.height());
 
 //    if(newSize.width() != oldSize.width())
@@ -368,15 +380,18 @@ void MainWindow::mouseMoveEvent(QMouseEvent *event)
 {
     if(event->buttons().testFlag(Qt::LeftButton))
     {
-    if(timerId > 0)
-    {
+        if(timerId > 0)
+        {
         killTimer(timerId);
         timerId = 0;
+        }
+
+
+        this->move(this->pos() + (event->globalPos() - mLastMousePosition));
+        mLastMousePosition = event->globalPos();
     }
-
-
-    this->move(this->pos() + (event->globalPos() - mLastMousePosition));
-    mLastMousePosition = event->globalPos();
+    else {
+        this->playBtn->show();
     }
 }
 
