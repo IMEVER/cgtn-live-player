@@ -8,12 +8,13 @@
             "name": "Run cgtn",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/cgtn-live-player",
+            "program": "${workspaceFolder}/build-debug/cgtn-live-player",
             "args": [],
             "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/build",
+            "cwd": "${workspaceFolder}",
             "externalConsole": false,
             "preLaunchTask": "build debug",
+            // "postDebugTask": "clean",
             "linux": {
                 "MIMode": "gdb"
             }

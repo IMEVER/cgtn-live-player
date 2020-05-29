@@ -28,20 +28,20 @@ SOURCES += src/main.cpp\
     src/app.cpp \
     src/about.cpp \
     src/player.cpp \
-    src/playbutton.cpp \
-    src/volumelabel.cpp \
     src/aboutdialog.cpp \
-    src/item.cpp \
+    src/conf.cpp \
+    src/listTv.cpp \
+    src/listGroup.cpp \
     src/logger.cpp
 
 HEADERS  += src/mainwindow.h \
     src/app.h \
     src/about.h \
     src/player.h \
-    src/playbutton.h \
-    src/volumelabel.h \
     src/aboutdialog.h \
-    src/item.h \
+    src/conf.h \
+    src/listTv.h \
+    src/listGroup.h \
     src/logger.h
 
 DISTFILES +=

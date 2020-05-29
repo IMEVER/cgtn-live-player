@@ -1,6 +1,6 @@
 .PHONY:deb clean
 
-VERSION=3.1.2
+VERSION=3.2.0
 PREFIX = /usr
 DESTDIR = dist/
 PACKDIR = package

@@ -3,67 +3,41 @@
 #include <QApplication>
 #include <QDesktopWidget>
 #include <singleapplication.h>
+#include "listTv.h"
+#include "about.h"
 
-Player::Player(std::vector<Item> tvVector) : QObject()
+Player::Player() : QObject()
 {
-    playButton = new PlayButton;
-    label = new VolumeLabel();
-    mainwWindow = new MainWindow(tvVector);
-
-    mainwWindow->addVolumeLabel(label->label);
-
-    mainwWindow->addPlayButton(playButton);
-    connect(mainwWindow, SIGNAL(windowResize(QSize )), this, SLOT(resize(QSize )));
-    mainwWindow->connect(mainwWindow, &MainWindow::toggleTrigger, this, [=](bool isPlaying){
-        //resize(mainwWindow->size());
-        label->hide();
-        playButton->setChecked(isPlaying);
-        if(isPlaying)
-            playButton->show();
-        else
-            playButton->hide();
-    });
-
-    connect(playButton, SIGNAL(stateChange(bool)), this, SLOT(stateChanged(bool)));
-
-    connect(mainwWindow, SIGNAL(volumeChanged(int)), label, SLOT(volumeChanged(int)));
-
-
+    mainWindow = new MainWindow();
 }
 
 Player::~Player()
 {
-    delete mainwWindow;
-    delete playButton;
-    delete label;
+    delete mainWindow;
 }
 
 void Player::run()
 {
-    mainwWindow->move(QApplication::desktop()->screen()->rect().center() - mainwWindow->rect().center());
-    mainwWindow->show();
-//    QRect r = mainwWindow->geometry();
-//    r.moveCenter(QApplication::desktop()->availableGeometry().center());
-//    mainwWindow->setGeometry(r);
-
+    mainWindow->move(QApplication::desktop()->screen()->rect().center() - mainWindow->rect().center());
+    mainWindow->show();
+    mainWindow->loadTv();
 }
 
-void Player::resize(QSize size)
-{
-    playButton->moveTo(size.width()/2 - 64, size.height()/2 - 70);
-    label->moveTo(size.width()/2, size.height()/2);
-}
-
-void Player::bind(About *about)
+void Player::bind()
 {
 //    connect(mainwWindow, SIGNAL(menuTrigger(int )), about, SLOT(triggered()));
-    connect(mainwWindow, &MainWindow::menuTrigger, about, [=](int item){
-        about->show();
+    connect(mainWindow, &MainWindow::menuTrigger, [=](int item){
+        if(item == 1)
+        {
+            About *about = new About;
+            about->show();
+        }
+        else if(item == 2)
+        {
+            ListTvWindow *listWindow = new ListTvWindow(mainWindow);
+            listWindow->show();
+            connect(listWindow, &ListTvWindow::groupNameChanged, mainWindow, &MainWindow::updateGroupName);
+            connect(listWindow, &ListTvWindow::tvTitleChanged, mainWindow, &MainWindow::updateTvTitle);
+        }
     });
-}
-
-void Player::stateChanged(bool checked)
-{
-        qDebug()<<"click triggered occurs"<<checked;
-        mainwWindow->play(!checked);
 }

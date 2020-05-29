@@ -7,7 +7,6 @@
 #include <string>
 #include <mutex>
 
-
 class Logger
 {
 public:
@@ -24,7 +23,7 @@ public:
 
 protected:
     static Logger* pInstance;
-    static const char* const kLogFileName;
+    static const char* kLogFileName;
 
     std::ofstream mOutputStream;
 

@@ -1,5 +1,5 @@
 package: cgtn-live-player
-version: 3.1.2
+version: 3.2.0
 architecture: amd64
 Maintainer: IMEVER <Hobart_Tian@imever.me>
 description: 央视外语频道的播放器

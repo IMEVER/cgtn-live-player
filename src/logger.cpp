@@ -10,7 +10,7 @@ const string Logger::kLogLevelDebug = "DEBUG";
 const string Logger::kLogLevelInfo = "INFO";
 const string Logger::kLogLevelError = "ERROR";
 
-const char* const Logger::kLogFileName = "/tmp/cgtn.log";
+const char* Logger::kLogFileName = "/tmp/cgtn.log";
 
 Logger* Logger::pInstance = nullptr;
 

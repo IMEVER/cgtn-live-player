@@ -1,28 +1,22 @@
 #ifndef APP_H
 #define APP_H
 
-#include "about.h"
 #include "player.h"
-
+#include "conf.h"
 
 class App
 {
-private:
-    std::vector<Item> tvVector;
-
 public:
-    About *about;
     Player *player;
+    Conf *conf;
 
 public:
     App();
     ~App();
     void run();
-    void showAbout();
 
 private:
-    void init();
-    void loadTvVector();
+
 };
 
 #endif // APP_H

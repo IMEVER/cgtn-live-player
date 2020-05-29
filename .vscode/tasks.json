@@ -27,11 +27,14 @@
             "options": {
                 //"cwd": "${workspaceFolder}/build"
             },
-            "command": "rm -rf build && mkdir build && cd build && qmake -o Makefile ../cgtn.pro -spec linux-clang CONFIG+=debug CONFIG+=qml_debug && make"
+            "command": "mkdir -p build-debug && cd build-debug && qmake -o Makefile ../cgtn.pro -spec linux-clang CONFIG+=debug CONFIG+=qml_debug && make"
         },
         {
             "label": "clean",
             "type": "shell",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
             "command": "make clean"
         }
     ]

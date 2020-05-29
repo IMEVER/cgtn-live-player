@@ -5,30 +5,36 @@
 #include <QMediaPlayer>
 #include <QPoint>
 #include <QDateTime>
-#include <QStackedLayout>
 #include <QMenuBar>
 #include <QPushButton>
 #include <QLabel>
 #include <vector>
-#include "item.h"
-#include "playbutton.h"
-
+#include <QSortFilterProxyModel>
+#include <QTreeView>
+#include <QVideoWidget>
+#include <QLineEdit>
+#include <QStandardItemModel>
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
+    enum PlayStatus {
+        playing,
+        stopped,
+        loading
+    };
+
 public:
-    explicit MainWindow(std::vector<Item> tvVector, QWidget *parent = 0);
+    explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
-    QStackedLayout *mainLayout;
     QMediaPlayer * mediaPlayer;
 
     void initContextMenu();
-    void addPlayButton(PlayButton *playButton);
-    void addVolumeLabel(QLabel *label);
+    void loadTv();
+    void loadTv(int groupIndex, int tvIndex);
 
-    void play(bool play);
+    void play(PlayStatus status);
     bool event(QEvent* event) override;
     void mouseDoubleClickEvent( QMouseEvent * e ) override;
     void resizeEvent(QResizeEvent * event) override;
@@ -38,6 +44,9 @@ public:
 
     void enterEvent(QEvent *event) override;
     void leaveEvent(QEvent *event) override;
+
+    bool eventFilter(QObject *watched, QEvent *event) override;
+
 public slots:
     void toFront();
 
@@ -49,38 +58,50 @@ protected:
     void dragEnterEvent(QDragEnterEvent *event) override;
     void dropEvent(QDropEvent *event) override;
 
-private:    
+private:
+    QStandardItemModel *model;
+    QLineEdit * search;
+    QWidget *filterWidget;
+    QVideoWidget *_videoWidget;
     QMenu *contextMenu;
-    PlayButton *playBtn;
+    QLabel * volumeLabel;
+    QPushButton * playButton;
+    QTreeView *treeMenu;
     QTimer *poller;
-    bool _isPlaying;
+    PlayStatus playStatus;
+    QSortFilterProxyModel *filterModel;
 
 //    QString url = QString("https://live.cgtn.com/manifest.m3u8");
-    std::vector<Item> urls;
     int timerId;
+    int volumeTimerId;
+    int percent;
     bool pressing;
     qint64 current;
     QPoint mLastMousePosition;
     qreal ratio;
 
-    bool isPlaying();
     void toogle();
+    void showVolumeLabel(int volume);
+    void showPlayButton();
     void toggleTopHint();
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
     void timerEvent(QTimerEvent *event) override;
-    void loadTv(Item url);
 
 signals:
     void menuTrigger(int contextMenu);
-    void toggleTrigger(bool isPlaying);
+    void toggleTrigger(PlayStatus);
     void windowResize(QSize size);
     void volumeChanged(int unit);
 
 private slots:
     void printError(QMediaPlayer::Error error);
     void switchTv(QAction *action);
+
+public slots:
+    void updateGroupName(int index);
+    void updateTvTitle(int groupIndex, int tvIndex);
 };
 
 #endif // MAINWINDOW_H
