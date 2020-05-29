@@ -5,6 +5,8 @@
 #include <QPushButton>
 #include <QLineEdit>
 #include <QMessageBox>
+#include <QApplication>
+#include <QDesktopWidget>
 #include "conf.h"
 #include "logger.h"
 
@@ -43,6 +45,7 @@ ListGroup::ListGroup(QWidget *parent) : QMainWindow(parent)
     }
 
     connect(listWidget->itemDelegate(), &QAbstractItemDelegate::closeEditor, [=](QWidget *editor, QAbstractItemDelegate::EndEditHint hint){
+        Q_UNUSED(hint);
         QString groupName = reinterpret_cast<QLineEdit *>(editor)->text();
         int row = listWidget->currentRow();
         Conf *conf = Conf::instance();
@@ -82,6 +85,8 @@ ListGroup::ListGroup(QWidget *parent) : QMainWindow(parent)
     widget->setLayout(layout);
     setCentralWidget(widget);
     resize(300, 300);
+    move(QApplication::desktop()->screen()->rect().center() - this->rect().center());
+    setWindowTitle("分组列表");
 }
 
 ListGroup::~ListGroup()

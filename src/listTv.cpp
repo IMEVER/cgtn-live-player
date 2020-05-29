@@ -4,6 +4,8 @@
 #include <QHeaderView>
 #include <QPushButton>
 #include <QLineEdit>
+#include <QApplication>
+#include <QDesktopWidget>
 #include "conf.h"
 #include "listGroup.h"
 #include "logger.h"
@@ -91,6 +93,7 @@ ListTvWindow::ListTvWindow(QWidget *parent) : QMainWindow(parent)
     });
 
     connect(tableView->itemDelegate(), &QAbstractItemDelegate::closeEditor, [=](QWidget *editor, QAbstractItemDelegate::EndEditHint hint) {
+        Q_UNUSED(hint);
         QString content = reinterpret_cast<QLineEdit *>(editor)->text();
         QModelIndex indexModel = tableView->currentIndex();
         Conf *conf = Conf::instance();
@@ -139,6 +142,7 @@ ListTvWindow::ListTvWindow(QWidget *parent) : QMainWindow(parent)
     mainLayout->addWidget(tableView);
 
     setFixedSize(800, 500);
+    move(QApplication::desktop()->screen()->rect().center() - this->rect().center());
 
     setWindowTitle("电视频道列表");
     Conf::instance()->save();
