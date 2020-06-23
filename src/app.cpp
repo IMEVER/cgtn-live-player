@@ -13,7 +13,6 @@ App::~App()
     {
         conf->save();
     }
-    delete conf;
     delete player;
 }
 

@@ -13,7 +13,5 @@ int main(int argc, char *argv[])
     App app;
     app.run();
 
-//    QObject::connect(&a, &SingleApplication::instanceStarted, &app, &App::showAbout);
-
     return a.exec();
 }

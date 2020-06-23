@@ -27,9 +27,12 @@ ListGroup::ListGroup(QWidget *parent) : QMainWindow(parent)
         listWidget->editItem(item);
     });
     toolBar->addWidget(addButton);
-    layout->addLayout(toolBar);
+    // layout->addLayout(toolBar);
 
     listWidget = new QListWidget;
+    listWidget->setSpacing(10);
+    listWidget->setAlternatingRowColors(true);
+    listWidget->setStyleSheet("QListWidget::item { border-bottom: 1px solid black; }");
     listWidget->setSelectionBehavior(QTableWidget::SelectRows);
     listWidget->setSelectionMode(QTableWidget::SingleSelection);
     listWidget->setEditTriggers(QListWidget::DoubleClicked);
@@ -64,6 +67,16 @@ ListGroup::ListGroup(QWidget *parent) : QMainWindow(parent)
             box->show();
             return;
         }
+
+        if (groupName.size() == 0 || groupName.count() > 20)
+        {
+            listWidget->editItem(listWidget->item(row));
+            QMessageBox * box = new QMessageBox(this);
+            box->setWindowTitle("警告：");
+            box->setText("分组名称不能为空或者长度大于20，请重新修改！");
+            box->show();
+            return;
+        }
         
         Logger::instance().log("Group name: " + groupName.toStdString(), Logger::kLogLevelDebug);
         if (row == conf->getGroupList()->count())
@@ -84,9 +97,16 @@ ListGroup::ListGroup(QWidget *parent) : QMainWindow(parent)
     QWidget *widget = new QWidget;
     widget->setLayout(layout);
     setCentralWidget(widget);
-    resize(300, 300);
+    setFixedSize(300, 200);
     move(QApplication::desktop()->screen()->rect().center() - this->rect().center());
     setWindowTitle("分组列表");
+    // setWindowFlag(Qt::WindowStaysOnTopHint, true);
+    // setWindowFlag(Qt::CustomizeWindowHint, true);
+    // setWindowFlag(Qt::WindowMinMaxButtonsHint, false);
+    Qt::WindowFlags f = windowFlags();
+    f |= Qt::CustomizeWindowHint;
+    f &= ~Qt::WindowMinMaxButtonsHint;
+    setWindowFlags(f);
 }
 
 ListGroup::~ListGroup()

@@ -5,6 +5,7 @@
 #include <singleapplication.h>
 #include "listTv.h"
 #include "about.h"
+#include "playerWidget.h"
 
 Player::Player() : QObject()
 {
@@ -20,13 +21,12 @@ void Player::run()
 {
     mainWindow->move(QApplication::desktop()->screen()->rect().center() - mainWindow->rect().center());
     mainWindow->show();
-    mainWindow->loadTv();
+    mainWindow->play();
 }
 
 void Player::bind()
 {
-//    connect(mainwWindow, SIGNAL(menuTrigger(int )), about, SLOT(triggered()));
-    connect(mainWindow, &MainWindow::menuTrigger, [=](int item){
+    connect(mainWindow, &MainWindow::openWindowTrigger, [=](int item){
         if(item == 1)
         {
             About *about = new About;

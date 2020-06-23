@@ -1,14 +1,77 @@
 #include "listTv.h"
 #include <QVBoxLayout>
-#include <QTableView>
 #include <QHeaderView>
 #include <QPushButton>
 #include <QLineEdit>
 #include <QApplication>
 #include <QDesktopWidget>
+
+#include <QItemDelegate>
+#include <QComboBox>
+
 #include "conf.h"
 #include "listGroup.h"
 #include "logger.h"
+
+class GroupDelegate : public QItemDelegate
+{
+private:
+    QStringList *groupList;
+    QTableView *tableView;
+
+public:
+    // GroupDelegate(QObject *parent=0) : QItemDelegate(parent) {}
+    GroupDelegate(QTableView *tableView, QStringList *groupList, QObject *parent = 0) : QItemDelegate(parent)
+    {
+        this->tableView = tableView;
+        this->groupList = groupList;
+    }
+    ~GroupDelegate()
+    {
+        //delete groupList;
+    }
+    QWidget *createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const override
+    {
+        Q_UNUSED(option);
+        Q_UNUSED(index);
+
+        QComboBox *editor = new QComboBox(parent);
+        foreach (QString groupName, *groupList)
+        {
+            editor->addItem(groupName);
+        }
+        return editor;
+    }
+    void setEditorData(QWidget *editor, const QModelIndex &index) const override
+    {
+        QString text = index.model()->data(index, Qt::EditRole).toString();
+        QComboBox *comboBox = static_cast<QComboBox *>(editor);
+        int tindex = comboBox->findText(text);
+        comboBox->setCurrentIndex(tindex);
+    }
+    void setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const override
+    {
+        QComboBox *comboBox = static_cast<QComboBox *>(editor);
+        QString text = comboBox->currentText();
+        model->setData(index, text, Qt::EditRole);
+        int toIndex = Conf::instance()->updateTvGroup(index.row(), text);
+        if (toIndex != -1)
+        {
+            // model->moveRow(index.parent(), index.row(), model->index(toIndex, 0).parent(), toIndex);
+
+            QStandardItemModel *standardModel = static_cast<QStandardItemModel *>(model);
+            QList<QStandardItem *> list = standardModel->takeRow(index.row());
+            standardModel->insertRow(toIndex, list);
+            tableView->setCurrentIndex(standardModel->index(toIndex, 1));
+            tableView->selectRow(toIndex);
+        }
+    }
+    void updateEditorGeometry(QWidget *editor, const QStyleOptionViewItem &option, const QModelIndex &index) const override
+    {
+        Q_UNUSED(index);
+        editor->setGeometry(option.rect);
+    }
+};
 
 ListTvWindow::ListTvWindow(QWidget *parent) : QMainWindow(parent)
 {
@@ -18,7 +81,7 @@ ListTvWindow::ListTvWindow(QWidget *parent) : QMainWindow(parent)
     setCentralWidget(centralWidget);
 
     QHBoxLayout *toolBar = new QHBoxLayout;
-    toolBar->setAlignment(Qt::AlignLeft);
+    toolBar->setAlignment(Qt::AlignCenter);
     QPushButton *editGroup = new QPushButton(this);
     editGroup->setText("修改分组");
     editGroup->setFixedWidth(100);
@@ -46,11 +109,52 @@ ListTvWindow::ListTvWindow(QWidget *parent) : QMainWindow(parent)
         });
     });
     toolBar->addWidget(editGroup);
+
+    QPushButton *moveUp = new QPushButton;
+    moveUp->setText("向上移");
+    moveUp->setFixedWidth(80);
+    connect(moveUp, &QPushButton::clicked, [=](bool checked){
+        Q_UNUSED(checked);
+        int row = tableView->currentIndex().row();
+        if (row > 0)
+        {
+            if (model->data(model->index(row -1, 1)).toString().compare(model->data(model->index(row, 1)).toString()) == 0)
+            {
+                model->insertRow(row - 1, model->takeRow(row));
+                tableView->setCurrentIndex(model->index(row -1, 0));
+                tableView->selectRow(row -1);
+                Conf::instance()->moveUp(row);
+            }
+        }        
+    });
+    toolBar->addWidget(moveUp);
+
+    QPushButton *moveDown = new QPushButton;
+    moveDown->setText("向下移");
+    moveDown->setFixedWidth(80);
+    connect(moveDown, &QPushButton::clicked, [=](bool checked){
+        Q_UNUSED(checked);
+        int row = tableView->currentIndex().row();
+        if (row < model->rowCount() - 1)
+        {
+            if (model->data(model->index(row, 1)).toString().compare(model->data(model->index(row+1, 1)).toString()) == 0)
+            {
+                model->insertRow(row + 1, model->takeRow(row));
+                tableView->setCurrentIndex(model->index(row + 1, 0));
+                tableView->selectRow(row + 1);
+                Conf::instance()->moveDown(row);
+            }
+        }    
+    });
+    toolBar->addWidget(moveDown);
+
     mainLayout->addLayout(toolBar);
 
-    QTableView *tableView = new QTableView;
+    tableView = new QTableView;
     tableView->setSelectionBehavior(QTableView::SelectRows);
     tableView->setSelectionMode(QTableView::SingleSelection);
+
+    tableView->setItemDelegateForColumn(1, new GroupDelegate(tableView, Conf::instance()->getGroupList()));
 
     model = new QStandardItemModel;
     model->setColumnCount(3);
@@ -145,7 +249,6 @@ ListTvWindow::ListTvWindow(QWidget *parent) : QMainWindow(parent)
     move(QApplication::desktop()->screen()->rect().center() - this->rect().center());
 
     setWindowTitle("电视频道列表");
-    Conf::instance()->save();
 }
 
 ListTvWindow::~ListTvWindow()

@@ -74,6 +74,101 @@ void Conf::editGroupName(int index, QString groupName)
 {
     groupList->replace(index, groupName);
     conf.groups->at(index)->name = groupName;
+    setDirty();
+}
+
+int Conf::updateTvGroup(int tvIndex, QString toGroup)
+{
+    int toIndex = -1;
+    int toGroupIndex = groupList->indexOf(toGroup);
+    if (toGroupIndex > -1)
+    {
+        int groupIndex = 0;
+        int index = tvIndex;
+        foreach(Group *group, *conf.groups)
+        {
+            if (index >= group->tvs->count())
+            {
+                index -= group->tvs->count();
+                groupIndex++;
+            }
+            else
+            {
+                break;
+            }
+        }
+        if (groupIndex < groupList->count())
+        {
+            Group *group = conf.groups->at(groupIndex);
+            if (index < group->tvs->count())
+            {
+                Item *item = group->tvs->takeAt(index);
+                conf.groups->at(toGroupIndex)->tvs->append(item);
+                for (; toGroupIndex >= 0; toGroupIndex--)
+                {
+                    toIndex += conf.groups->at(toGroupIndex)->tvs->count();
+                }
+
+                setDirty();
+            }            
+        }
+    }
+
+    return toIndex;
+}
+
+void Conf::moveUp(int index)
+{
+    int groupIndex = 0;
+    foreach(Group *group, *conf.groups)
+    {
+        if (index >= group->tvs->count())
+        {
+            index -= group->tvs->count();
+            groupIndex++;
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    if (groupIndex < conf.groups->count() && index >0)
+    {
+        Group *group = conf.groups->at(groupIndex);
+        if (group->tvs->count() > index)
+        {
+            group->tvs->insert(index -1, group->tvs->takeAt(index));
+            setDirty();
+        }
+    }
+}
+
+void Conf::moveDown(int index)
+{
+    int groupIndex = 0;
+    foreach(Group *group, *conf.groups)
+    {
+        if (index >= group->tvs->count())
+        {
+            index -= group->tvs->count();
+            groupIndex++;
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    if (groupIndex < conf.groups->count())
+    {
+        Group *group = conf.groups->at(groupIndex);
+        if (group->tvs->count() -1 > index)
+        {
+            group->tvs->insert(index+1, group->tvs->takeAt(index));
+            setDirty();
+        }
+    }
 }
 
 void Conf::init()

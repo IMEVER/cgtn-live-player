@@ -3,12 +3,14 @@
 
 #include <QMainWindow>
 #include <QStandardItemModel>
+#include <QTableView>
 
 class  ListTvWindow : public QMainWindow
 {
     Q_OBJECT
 private:
     QStandardItemModel *model;
+    QTableView *tableView;
 public:
      explicit ListTvWindow(QWidget *parent=0);
     ~ ListTvWindow();

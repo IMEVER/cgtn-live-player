@@ -55,6 +55,9 @@ public:
     QStringList *getGroupList();
     void addGroup(QString groupName);
     void editGroupName(int index, QString groupName);
+    int updateTvGroup(int tvIndex, QString toGroup);
+    void moveUp(int index);
+    void moveDown(int index);
     void setDirty();
     bool isDirty();
     void save();

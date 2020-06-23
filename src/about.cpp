@@ -17,7 +17,9 @@ void About::init()
 
     about = new AboutDialog;
     about->setAttribute(Qt::WA_ShowModal, true);
+    
     about->setWindowTitle("关于");
+
     QIcon icon;
     icon.addPixmap(pixmap, QIcon::Normal);
 

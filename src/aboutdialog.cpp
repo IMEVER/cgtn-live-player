@@ -39,6 +39,8 @@ AboutDialog::AboutDialog(QWidget *parent) : QDialog(parent)
     setLayout(vboxLayout);
     setStyleSheet("background-color: white");
     setFixedWidth(400);
+    setWindowFlags(windowFlags() & ~Qt::WindowMinMaxButtonsHint);
+    // setWindowFlag(Qt::WindowMinMaxButtonsHint, false);
 }
 
 AboutDialog::~AboutDialog()

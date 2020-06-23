@@ -25,6 +25,8 @@ unix{
 
 SOURCES += src/main.cpp\
         src/mainwindow.cpp \
+    src/playerWidget.cpp \
+    src/filterWidget.cpp \
     src/app.cpp \
     src/about.cpp \
     src/player.cpp \
@@ -35,6 +37,8 @@ SOURCES += src/main.cpp\
     src/logger.cpp
 
 HEADERS  += src/mainwindow.h \
+    src/playerWidget.h \
+    src/filterWidget.h \
     src/app.h \
     src/about.h \
     src/player.h \
