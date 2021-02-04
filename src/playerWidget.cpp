@@ -27,7 +27,7 @@ PlayerWidget::PlayerWidget(QWidget *parent): QWidget(parent)
     volumeLabel->setFixedSize(QSize(140, 100));
     volumeLabel->setAlignment(Qt::AlignCenter);
     volumeLabel->setAutoFillBackground(true);
-    volumeLabel->setStyleSheet("QLabel {border: 1px solid black; border-radius: 10px; font-size: 80px; color: white; background-color: rgba(0, 0, 0, 255) }");
+    volumeLabel->setStyleSheet("QLabel {border: 1px solid black; border-radius: 10px; font-size: 80px; color: white; background-color: rgba(0, 0, 0, 200) }");
     // QPalette palette;
     // palette.setColor(QPalette::Background, QColor::fromRgba64(0, 0, 0, 100));
     // volumeLabel->setPalette(palette);
@@ -36,7 +36,7 @@ PlayerWidget::PlayerWidget(QWidget *parent): QWidget(parent)
     playButton = new QPushButton(this);
     playButton->setFixedSize(QSize(128, 128));
     playButton->setFocusPolicy(Qt::NoFocus);
-    playButton->setStyleSheet("border-image:url(:/resource/loading.gif); border: 1px solid black; border-radius: 10px; font-size: 80px; color: white; background-color: rgba(0,0,0, 1)");
+    playButton->setStyleSheet("border-image:url(:/resource/loading.gif); border: 1px solid black; border-radius: 10px; font-size: 80px; color: white; background-color: rgba(0,0,0, 0.6)");
     layout->addWidget(playButton);
 
     connect(playButton, &QPushButton::clicked, this, &PlayerWidget::toogle);
@@ -198,7 +198,7 @@ void PlayerWidget::initContextMenu()
     sideAction->setCheckable(true);
     sideAction->setChecked(true);
     // sideAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_S));
-    connect(sideAction, &QAction::changed, this, [=]() {
+    connect(sideAction, &QAction::triggered, this, [=]() {
         emit toggleFilterWidget();
     });
     contextMenu->addAction(sideAction);
@@ -621,7 +621,6 @@ void PlayerWidget::resizeEvent(QResizeEvent *event)
     Q_UNUSED(event);
     if (playButton->isVisible())
     {
-        playButton->hide();
         playButton->hide();
         showPlayButton();
     }

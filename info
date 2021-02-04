@@ -1,0 +1,17 @@
+{
+    "appid": "me.imever.cgtn-live-player",
+    "name": "cgtn播放器",
+    "version": "#VERSION#",
+    "arch": ["amd64"],
+    "permissions": {
+        "autostart": false,
+        "notification": false,
+        "trayicon": false,
+        "clipboard": false,
+        "account": false,
+        "bluetooth": false,
+        "camera": false,
+        "audio_record": false,
+        "installed_apps": false
+    }
+}

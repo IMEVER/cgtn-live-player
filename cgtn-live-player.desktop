@@ -1,7 +1,7 @@
 [Desktop Entry]
 Categories=Application;Video
 Comment=Cgtn live player
-Exec=cgtn-live-player
+Exec=/opt/apps/me.imever.cgtn-live-player/files/bin/cgtn-live-player
 GenericName=Cgtn player
 Icon=cgtn-live-player
 Name=Cgtn Live Player

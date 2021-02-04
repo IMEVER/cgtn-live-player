@@ -47,9 +47,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     });
     connect(_playerWidget, &PlayerWidget::toggleFilterWidget, [=](){
         filterWidget->setHidden(!filterWidget->isHidden());
+        (menuBar()->actions().at(2)->menu())->actions()[0]->setChecked(!filterWidget->isHidden());
     });
     layout->addWidget(_playerWidget);
-
 
     setWindowIcon(QIcon(":/resource/cgtn-live-player.svg"));
 
@@ -107,10 +107,12 @@ void MainWindow::initMenubar()
     int groupIndex = 0;
     foreach (Group *group, *Conf::instance()->getJsonConf().groups)
     {
+        // tvMenu->addSection(group->name)->setText(QString("----?----").arg(group->name));
+        tvMenu->addAction(group->name)->setEnabled(false);
         for (int tvIndex = 0, len = group->tvs->size(); tvIndex < len; tvIndex++)
         {
             Item *tv = group->tvs->at(tvIndex);
-            QAction *action = new QAction(tv->title, this);
+            QAction *action = new QAction("    " + tv->title, this);
             QVector<int> indexes(2);
             indexes[0] = groupIndex;
             indexes[1] = tvIndex;
@@ -125,7 +127,6 @@ void MainWindow::initMenubar()
             tvMenu->addAction(action);
         }
         // tvMenu->addSeparator();
-        tvMenu->addSection(group->name);
         groupIndex++;
     }
     connect(tvMenu, &QMenu::triggered, this, [this](QAction *action){
@@ -133,6 +134,16 @@ void MainWindow::initMenubar()
     });
 
     QMenu *option = menuBar()->addMenu("选项(O)");
+
+    QAction *sideBarAction = new QAction("侧边栏(S)");
+    sideBarAction->setCheckable(true);
+    sideBarAction->setChecked(true);
+    connect(sideBarAction, &QAction::triggered, this, [this](bool checked){
+        filterWidget->setHidden(!checked);
+        _playerWidget->setSideActionMenuChecked(checked);
+    });
+    option->addAction(sideBarAction);
+
     option->addAction("编辑播放列表(E)", this, [this](){ 
         emit openWindowTrigger(2);
     });
@@ -186,8 +197,7 @@ bool MainWindow::event(QEvent *event)
         QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
         if (keyEvent->key() == Qt::Key_S)
         {
-            bool hidden = filterWidget->isHidden();
-            _playerWidget->setSideActionMenuChecked(hidden);
+            (menuBar()->actions().at(2)->menu())->actions()[0]->trigger();
             return true;
         }
     }

@@ -1,9 +1,9 @@
-package: cgtn-live-player
-version: 3.2.0
+package: me.imever.cgtn-live-player
+version: #VERSION#
 architecture: amd64
 Maintainer: IMEVER <Hobart_Tian@imever.me>
-description: 央视外语频道的播放器
 Section: video
 Priority: optional
-Installed-Size:
+Installed-Size: #SIZE#
 depends: libqgsttools-p1
+description: 央视外语频道的播放器
