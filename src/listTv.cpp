@@ -3,6 +3,7 @@
 #include <QHeaderView>
 #include <QPushButton>
 #include <QLineEdit>
+#include <QtGui>
 #include <QApplication>
 #include <QDesktopWidget>
 
@@ -75,12 +76,10 @@ public:
 
 ListTvWindow::ListTvWindow(QWidget *parent) : QMainWindow(parent)
 {
-    QVBoxLayout *mainLayout = new QVBoxLayout;
-    QWidget *centralWidget = new QWidget(this);
-    centralWidget->setLayout(mainLayout);
-    setCentralWidget(centralWidget);
+    QVBoxLayout *mainLayout = new QVBoxLayout(this);
+    setLayout(mainLayout);
 
-    QHBoxLayout *toolBar = new QHBoxLayout;
+    QHBoxLayout *toolBar = new QHBoxLayout(this);
     toolBar->setAlignment(Qt::AlignCenter);
     QPushButton *editGroup = new QPushButton(this);
     editGroup->setText("修改分组");
@@ -110,7 +109,7 @@ ListTvWindow::ListTvWindow(QWidget *parent) : QMainWindow(parent)
     });
     toolBar->addWidget(editGroup);
 
-    QPushButton *moveUp = new QPushButton;
+    QPushButton *moveUp = new QPushButton(this);
     moveUp->setText("向上移");
     moveUp->setFixedWidth(80);
     connect(moveUp, &QPushButton::clicked, [=](bool checked){
@@ -125,11 +124,11 @@ ListTvWindow::ListTvWindow(QWidget *parent) : QMainWindow(parent)
                 tableView->selectRow(row -1);
                 Conf::instance()->moveUp(row);
             }
-        }        
+        }
     });
     toolBar->addWidget(moveUp);
 
-    QPushButton *moveDown = new QPushButton;
+    QPushButton *moveDown = new QPushButton(this);
     moveDown->setText("向下移");
     moveDown->setFixedWidth(80);
     connect(moveDown, &QPushButton::clicked, [=](bool checked){
@@ -144,19 +143,19 @@ ListTvWindow::ListTvWindow(QWidget *parent) : QMainWindow(parent)
                 tableView->selectRow(row + 1);
                 Conf::instance()->moveDown(row);
             }
-        }    
+        }
     });
     toolBar->addWidget(moveDown);
 
     mainLayout->addLayout(toolBar);
 
-    tableView = new QTableView;
+    tableView = new QTableView(this);
     tableView->setSelectionBehavior(QTableView::SelectRows);
     tableView->setSelectionMode(QTableView::SingleSelection);
 
     tableView->setItemDelegateForColumn(1, new GroupDelegate(tableView, Conf::instance()->getGroupList()));
 
-    model = new QStandardItemModel;
+    model = new QStandardItemModel(this);
     model->setColumnCount(3);
     model->setHeaderData(0, Qt::Horizontal, QString("名称"));
     model->setHeaderData(1, Qt::Horizontal, "分组");
@@ -246,12 +245,11 @@ ListTvWindow::ListTvWindow(QWidget *parent) : QMainWindow(parent)
     mainLayout->addWidget(tableView);
 
     setFixedSize(800, 500);
-    move(QApplication::desktop()->screen()->rect().center() - this->rect().center());
+    move(QGuiApplication::primaryScreen()->availableGeometry().center() - this->rect().center());
 
     setWindowTitle("电视频道列表");
 }
 
 ListTvWindow::~ListTvWindow()
 {
-    delete model;
 }

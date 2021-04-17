@@ -1,9 +1,8 @@
 .PHONY:deb clean
 
-VERSION=3.2.1
+VERSION=3.2.2
 PREFIX = /opt/apps/me.imever.cgtn-live-player
-DESTDIR = dist/
-PACKDIR = package
+DESTDIR = dist
 BUILDDIR = build
 
 build: FORCE
@@ -13,26 +12,27 @@ build: FORCE
 	make
 
 package:
-	mkdir -p ${DESTDIR}${PACKDIR}
-	mkdir -p ${DESTDIR}${PACKDIR}${PREFIX}/files/bin
-	mkdir -p ${DESTDIR}${PACKDIR}${PREFIX}/files/share
-	mkdir -p ${DESTDIR}${PACKDIR}${PREFIX}/entries/applications
-	mkdir -p ${DESTDIR}${PACKDIR}${PREFIX}/entries/icons/hicolor/scalable/apps
+	strip ${BUILDDIR}/cgtn-live-player
+	mkdir -p ${DESTDIR}
+	mkdir -p ${DESTDIR}${PREFIX}/files/bin
+	mkdir -p ${DESTDIR}${PREFIX}/files/share
+	mkdir -p ${DESTDIR}${PREFIX}/entries/applications
+	mkdir -p ${DESTDIR}${PREFIX}/entries/icons/hicolor/scalable/apps
 
-	cp cgtn-live-player.desktop ${DESTDIR}${PACKDIR}${PREFIX}/entries/applications
-	cp resource/cgtn-live-player.png ${DESTDIR}${PACKDIR}${PREFIX}/entries/icons/hicolor/scalable/apps
-	cp ${BUILDDIR}/cgtn-live-player ${DESTDIR}${PACKDIR}${PREFIX}/files/bin
-	cp resource/tv.json ${DESTDIR}${PACKDIR}${PREFIX}/files/share/
-	cp info ${DESTDIR}${PACKDIR}${PREFIX}/
+	cp cgtn-live-player.desktop ${DESTDIR}${PREFIX}/entries/applications
+	cp resource/cgtn-live-player.png ${DESTDIR}${PREFIX}/entries/icons/hicolor/scalable/apps
+	cp ${BUILDDIR}/cgtn-live-player ${DESTDIR}${PREFIX}/files/bin
+	cp resource/tv.json ${DESTDIR}${PREFIX}/files/share/
+	cp info ${DESTDIR}${PREFIX}/
 
-	cp -r DEBIAN ${DESTDIR}${PACKDIR}/
+	cp -r DEBIAN ${DESTDIR}/
 
-	sed -i 's/#VERSION#/'${VERSION}'/' ${DESTDIR}${PACKDIR}${PREFIX}/info
-	sed -i 's/#VERSION#/'${VERSION}'/' ${DESTDIR}${PACKDIR}/DEBIAN/control
-	SIZE=`du -sh ${DESTDIR}${PACKDIR}${PREFIX} | awk '{print $$1}'`; \
-	sed -i 's/#SIZE#/'$$SIZE'/' ${DESTDIR}${PACKDIR}/DEBIAN/control
+	sed -i 's/#VERSION#/'${VERSION}'/' ${DESTDIR}${PREFIX}/info
+	sed -i 's/#VERSION#/'${VERSION}'/' ${DESTDIR}/DEBIAN/control
+	SIZE=`du -sh ${DESTDIR}${PREFIX} | awk '{print $$1}'`; \
+	sed -i 's/#SIZE#/'$$SIZE'/' ${DESTDIR}/DEBIAN/control
 
-	cd ${DESTDIR}${PACKDIR}; \
+	cd ${DESTDIR}; \
 		for f in `find opt -type f`; do md5sum $$f >> DEBIAN/md5sums; done
 
 clean:
@@ -40,7 +40,7 @@ clean:
 	rm -rf ${BUILDDIR}
 
 deb: package
-	cd ${DESTDIR};\
-	fakeroot dpkg -b ${PACKDIR} me.imever.cgtn-live-player_${VERSION}.deb
+	fakeroot dpkg -b ${DESTDIR} me.imever.cgtn-live-player_${VERSION}.deb
 
 FORCE:
+.PHONY: FORCE

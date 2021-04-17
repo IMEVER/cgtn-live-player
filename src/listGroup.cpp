@@ -5,6 +5,7 @@
 #include <QPushButton>
 #include <QLineEdit>
 #include <QMessageBox>
+#include <QtGui>
 #include <QApplication>
 #include <QDesktopWidget>
 #include "conf.h"
@@ -12,11 +13,11 @@
 
 ListGroup::ListGroup(QWidget *parent) : QMainWindow(parent)
 {
-    QVBoxLayout *layout = new QVBoxLayout;
+    QVBoxLayout *layout = new QVBoxLayout(this);
 
-    QHBoxLayout *toolBar = new QHBoxLayout;
+    QHBoxLayout *toolBar = new QHBoxLayout(this);
     toolBar->setAlignment(Qt::AlignLeft);
-    QPushButton *addButton = new QPushButton;
+    QPushButton *addButton = new QPushButton(this);
     addButton->setText("添加分组");
     addButton->setFixedWidth(100);
     connect(addButton, &QPushButton::clicked, [=](){
@@ -29,7 +30,7 @@ ListGroup::ListGroup(QWidget *parent) : QMainWindow(parent)
     toolBar->addWidget(addButton);
     // layout->addLayout(toolBar);
 
-    listWidget = new QListWidget;
+    listWidget = new QListWidget(this);
     listWidget->setSpacing(10);
     listWidget->setAlternatingRowColors(true);
     listWidget->setStyleSheet("QListWidget::item { border-bottom: 1px solid black; }");
@@ -57,7 +58,7 @@ ListGroup::ListGroup(QWidget *parent) : QMainWindow(parent)
         {
             return;
         }
-        
+
         if (conf->getGroupList()->contains(groupName))
         {
             listWidget->editItem(listWidget->item(row));
@@ -77,7 +78,7 @@ ListGroup::ListGroup(QWidget *parent) : QMainWindow(parent)
             box->show();
             return;
         }
-        
+
         Logger::instance().log("Group name: " + groupName.toStdString(), Logger::kLogLevelDebug);
         if (row == conf->getGroupList()->count())
         {
@@ -94,11 +95,11 @@ ListGroup::ListGroup(QWidget *parent) : QMainWindow(parent)
 
     layout->addWidget(listWidget);
 
-    QWidget *widget = new QWidget;
+    QWidget *widget = new QWidget(this);
     widget->setLayout(layout);
     setCentralWidget(widget);
     setFixedSize(300, 200);
-    move(QApplication::desktop()->screen()->rect().center() - this->rect().center());
+    move(QGuiApplication::primaryScreen()->availableGeometry().center() - this->rect().center());
     setWindowTitle("分组列表");
     // setWindowFlag(Qt::WindowStaysOnTopHint, true);
     // setWindowFlag(Qt::CustomizeWindowHint, true);
@@ -111,5 +112,4 @@ ListGroup::ListGroup(QWidget *parent) : QMainWindow(parent)
 
 ListGroup::~ListGroup()
 {
-    delete listWidget;
 }

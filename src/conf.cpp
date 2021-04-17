@@ -33,7 +33,6 @@ Conf::Conf(/* args */)
 
 Conf::~Conf()
 {
-    delete pInstance;
     delete groupList;
 }
 
@@ -110,7 +109,7 @@ int Conf::updateTvGroup(int tvIndex, QString toGroup)
                 }
 
                 setDirty();
-            }            
+            }
         }
     }
 
@@ -260,7 +259,7 @@ void Conf::save()
     foreach(Group *group, *conf.groups)
     {
         txt.append("\t\t{");
-        txt.append("\t\t\t\"group\": \"" + group->name + "\",");        
+        txt.append("\t\t\t\"group\": \"" + group->name + "\",");
         txt.append("\t\t\t\"list\": [");
 
         int tvIndex = group->tvs->length() - 1;

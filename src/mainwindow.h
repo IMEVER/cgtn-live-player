@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QPoint>
+#include <QSettings>
 
 #include "playerWidget.h"
 #include "filterWidget.h"
@@ -23,12 +24,13 @@ public slots:
 private:
     FilterWidget *filterWidget;
     PlayerWidget *_playerWidget;
+    QSettings *settings;
 
     void toggleTopHint();
     void initMenubar();
 
     protected:
-         bool event(QEvent* event) override;  
+         bool event(QEvent* event) override;
 
 signals:
     void windowResize(QSize size);

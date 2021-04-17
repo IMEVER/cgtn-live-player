@@ -10,6 +10,8 @@ int main(int argc, char *argv[])
 //    QApplication a(argc, argv);
     SingleApplication a(argc, argv);
     a.setApplicationName("cgtn");
+    a.setOrganizationName("imever");
+    a.setOrganizationDomain("imever.me");
     App app;
     app.run();
 

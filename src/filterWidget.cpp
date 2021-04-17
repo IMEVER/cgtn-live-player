@@ -6,9 +6,7 @@
 
 FilterWidget::FilterWidget(QWidget *parent): QWidget(parent)
 {
-    this->parent = parent;
-
-    QVBoxLayout *layout = new QVBoxLayout;
+    QVBoxLayout *layout = new QVBoxLayout(this);
     setLayout(layout);
 
         //Add filter search
@@ -31,7 +29,7 @@ FilterWidget::FilterWidget(QWidget *parent): QWidget(parent)
     // palette.setColor(QPalette::Background, qRgba(0, 0, 0, 100));
     // treeMenu->setPalette(palette);
 
-    model = new QStandardItemModel();
+    model = new QStandardItemModel(this);
     model->setColumnCount(1);
     QStandardItem *root = model->invisibleRootItem();
 
@@ -54,7 +52,7 @@ FilterWidget::FilterWidget(QWidget *parent): QWidget(parent)
         groupIndex++;
     }
 
-    filterModel = new QSortFilterProxyModel;
+    filterModel = new QSortFilterProxyModel(this);
     filterModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
     filterModel->setFilterKeyColumn(0);
     filterModel->setRecursiveFilteringEnabled(true);

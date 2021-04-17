@@ -7,31 +7,31 @@ const QString websiteLinkTemplate = "<a href='%1' style='text-decoration: none; 
 
 AboutDialog::AboutDialog(QWidget *parent) : QDialog(parent)
 {
-    QVBoxLayout *vboxLayout = new QVBoxLayout();
+    QVBoxLayout *vboxLayout = new QVBoxLayout(this);
 
 
-    productIcomLabel = new QLabel();
+    productIcomLabel = new QLabel(this);
     vboxLayout->addWidget(productIcomLabel, 0, Qt::AlignCenter);
 
-    productNameLabel = new QLabel();
+    productNameLabel = new QLabel(this);
     productNameLabel->setTextFormat(Qt::RichText);
     productNameLabel->setTextInteractionFlags(Qt::TextBrowserInteraction);
     productNameLabel->setOpenExternalLinks(true);
     productNameLabel->setStyleSheet("color: blue");
     vboxLayout->addWidget(productNameLabel, 0, Qt::AlignCenter);
 
-    websiteNameLabel = new QLabel();
+    websiteNameLabel = new QLabel(this);
     websiteNameLabel->setTextFormat(Qt::RichText);
     websiteNameLabel->setTextInteractionFlags(Qt::TextBrowserInteraction);
     websiteNameLabel->setOpenExternalLinks(true);
     vboxLayout->addWidget(websiteNameLabel, 0, Qt::AlignCenter);
 
-    versionLabel = new QLabel();
+    versionLabel = new QLabel(this);
     versionLabel->setText("1.0.0");
     versionLabel->setStyleSheet("color: black");
     vboxLayout->addWidget(versionLabel, 0, Qt::AlignCenter);
 
-    descriptionLabel = new QLabel();
+    descriptionLabel = new QLabel(this);
     descriptionLabel->setText("description");
     descriptionLabel->setStyleSheet("color: black");
     vboxLayout->addWidget(descriptionLabel, 0, Qt::AlignCenter);

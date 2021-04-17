@@ -17,7 +17,7 @@ void About::init()
 
     about = new AboutDialog;
     about->setAttribute(Qt::WA_ShowModal, true);
-    
+
     about->setWindowTitle("关于");
 
     QIcon icon;
@@ -28,8 +28,10 @@ void About::init()
     about->setProductLink("https://github.com/IMEVER/cgtn-live-player");
     about->setWebsiteLink("http://www.imever.me");
     about->setWebsiteName("IMEVER");
-    about->setVersion("3.2.1");
+    about->setVersion("3.2.2");
     about->setDescription("央视外语频道播放器");
+
+    connect(about, &QDialog::finished, this, &QObject::deleteLater);
 }
 
 void About::show()

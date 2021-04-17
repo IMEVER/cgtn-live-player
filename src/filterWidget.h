@@ -10,7 +10,6 @@ class FilterWidget : public QWidget
 {
     Q_OBJECT
 private:
-    QWidget *parent;
     QTreeView *treeMenu;
     QStandardItemModel *model;
     QSortFilterProxyModel *filterModel;

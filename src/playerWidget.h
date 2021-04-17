@@ -8,6 +8,7 @@
 #include <QMediaPlayer>
 #include <QDragEnterEvent>
 #include <QDropEvent>
+#include <QTimer>
 
 class PlayerWidget : public QWidget
 {
@@ -25,7 +26,7 @@ class PlayerWidget : public QWidget
         QLabel * volumeLabel;
         QPushButton * playButton;
         QMediaPlayer *mediaPlayer;
-        int volumeTimerId =0;
+        QTimer *volumeTimer;
         qreal ratio;
 
         int timerId = 0;
@@ -34,7 +35,7 @@ class PlayerWidget : public QWidget
         QPoint mLastMousePosition;
 
     public:
-        explicit PlayerWidget(QWidget *parent=nullptr);
+        explicit PlayerWidget(bool sideShow, QWidget *parent=nullptr);
         ~PlayerWidget();
         void loadTv(int groupIndex, int tvIndex);
 
@@ -42,7 +43,7 @@ class PlayerWidget : public QWidget
         void setMediaUrl(QUrl url);
         QUrl getMediaUrl();
 
-        void mouseDoubleClickEvent( QMouseEvent * e ) override;   
+        void mouseDoubleClickEvent( QMouseEvent * e ) override;
         #ifndef QT_NO_WHEELEVENT
         void wheelEvent(QWheelEvent *event) override;
         #endif
@@ -53,7 +54,7 @@ class PlayerWidget : public QWidget
         void toogle();
         void showVolumeLabel();
         void showPlayButton();
-        void initContextMenu();
+        void initContextMenu(bool sideShow);
         void toggleFullscreen();
         void showPlayFullscreen();
         void showPlayNormal();
@@ -64,14 +65,14 @@ class PlayerWidget : public QWidget
         void timerEvent(QTimerEvent *event) override;
         void mousePressEvent(QMouseEvent *event) override;
         void mouseMoveEvent(QMouseEvent *event) override;
-        void mouseReleaseEvent(QMouseEvent *event) override;            
+        void mouseReleaseEvent(QMouseEvent *event) override;
 
     protected:
         void resizeEvent(QResizeEvent *event) override;
     #ifndef QT_NO_CONTEXTMENU
         void contextMenuEvent(QContextMenuEvent *event) override;
     #endif // QT_NO_CONTEXTMENU
-        bool event(QEvent* event) override;    
+        bool event(QEvent* event) override;
         // void closeEvent(QCloseEvent *event) override;
         void dragEnterEvent(QDragEnterEvent *event) override;
         void dropEvent(QDropEvent *event) override;
@@ -83,7 +84,7 @@ class PlayerWidget : public QWidget
     private slots:
         void printError(QMediaPlayer::Error error);
     public slots:
-        void switchTv(QAction *action);        
+        void switchTv(QAction *action);
 };
 
 #endif //PLAYERWIDGET_H

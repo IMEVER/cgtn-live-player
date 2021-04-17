@@ -14,12 +14,12 @@ Player::Player() : QObject()
 
 Player::~Player()
 {
-    delete mainWindow;
+    mainWindow->deleteLater();
 }
 
 void Player::run()
 {
-    mainWindow->move(QApplication::desktop()->screen()->rect().center() - mainWindow->rect().center());
+    mainWindow->move(QGuiApplication::primaryScreen()->availableGeometry().center() - mainWindow->rect().center());
     mainWindow->show();
     mainWindow->play();
 }
@@ -29,7 +29,7 @@ void Player::bind()
     connect(mainWindow, &MainWindow::openWindowTrigger, [=](int item){
         if(item == 1)
         {
-            About *about = new About;
+            About *about = new About();
             about->show();
         }
         else if(item == 2)

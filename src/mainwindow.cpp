@@ -20,12 +20,15 @@
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
     // QGraphicsBlurEffect *effect = new QGraphicsBlurEffect(this);
-    
+
     // setGraphicsEffect(effect);
-    QHBoxLayout *layout = new QHBoxLayout;
+
+    settings = new QSettings(QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation) + "/setting.ini", QSettings::IniFormat, this);
+
+    QHBoxLayout *layout = new QHBoxLayout();
     layout->setMargin(0);
     layout->setContentsMargins(0, 0, 0, 0);
-    
+
     QWidget *centralWidget = new QWidget(this);
     centralWidget->setLayout(layout);
     setCentralWidget(centralWidget);
@@ -33,21 +36,27 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     // setAttribute(Qt::WA_TranslucentBackground, true);
     // setAutoFillBackground(true);
 
-    filterWidget = new FilterWidget;
+    filterWidget = new FilterWidget(this);
     filterWidget->setContentsMargins(0, 0, 0, 0);
     filterWidget->setFixedWidth(160);
+
+    filterWidget->setVisible(settings->value("side/isShow", true).toBool());
+
     connect(filterWidget, &FilterWidget::tvItemDoubleClicked, [=](int groupIndex, int tvIndex){
         _playerWidget->loadTv(groupIndex, tvIndex);
     });
     layout->addWidget(filterWidget);
 
-    _playerWidget = new PlayerWidget(this);
+    _playerWidget = new PlayerWidget(settings->value("side/isShow", true).toBool(), this);
     connect(_playerWidget, &PlayerWidget::menuTrigger, [=](int id){
         emit openWindowTrigger(id);
     });
     connect(_playerWidget, &PlayerWidget::toggleFilterWidget, [=](){
-        filterWidget->setHidden(!filterWidget->isHidden());
-        (menuBar()->actions().at(2)->menu())->actions()[0]->setChecked(!filterWidget->isHidden());
+        bool isShow = !filterWidget->isHidden();
+        filterWidget->setHidden(isShow);
+        (menuBar()->actions().at(2)->menu())->actions()[0]->setChecked(!isShow);
+        settings->setValue("side/isSHow", !isShow);
+        settings->sync();
     });
     layout->addWidget(_playerWidget);
 
@@ -65,8 +74,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
 void MainWindow::initMenubar()
 {
-    QMenu *file = menuBar()->addMenu("文件(F)");
-    
+    QMenu *file = menuBar()->addMenu("文件(&F)");
+
     file->addAction("打开(F)", this, [this](){
         QFileDialog dialog(this);
         dialog.setDirectory(QStandardPaths::standardLocations(QStandardPaths::MoviesLocation).first());
@@ -99,7 +108,7 @@ void MainWindow::initMenubar()
 
     file->addAction("退出(q)", qApp, SLOT(quit()));
 
-    QMenu *tvMenu = menuBar()->addMenu("电台(T)");
+    QMenu *tvMenu = menuBar()->addMenu("电台(&T)");
 
     QActionGroup *groups = new QActionGroup(this);
 
@@ -133,23 +142,25 @@ void MainWindow::initMenubar()
         _playerWidget->switchTv(action);
     });
 
-    QMenu *option = menuBar()->addMenu("选项(O)");
+    QMenu *option = menuBar()->addMenu("选项(&O)");
 
     QAction *sideBarAction = new QAction("侧边栏(S)");
     sideBarAction->setCheckable(true);
-    sideBarAction->setChecked(true);
+    sideBarAction->setChecked(settings->value("side/isShow", true).toBool());
     connect(sideBarAction, &QAction::triggered, this, [this](bool checked){
         filterWidget->setHidden(!checked);
         _playerWidget->setSideActionMenuChecked(checked);
+        settings->setValue("side/isShow", checked);
+        settings->sync();
     });
     option->addAction(sideBarAction);
 
-    option->addAction("编辑播放列表(E)", this, [this](){ 
+    option->addAction("编辑播放列表(E)", this, [this](){
         emit openWindowTrigger(2);
     });
 
-    QMenu *help = menuBar()->addMenu("帮助(H)");
-    
+    QMenu *help = menuBar()->addMenu("帮助(&H)");
+
     QMenu *key = help->addMenu("快捷键(K)");
     key->addAction("Up | Down => 音量调节");
     key->addAction("F | DbClick => 全屏切换");
@@ -227,6 +238,7 @@ void MainWindow::resizeEvent(QResizeEvent *event)
 
 void MainWindow::paintEvent(QPaintEvent *event)
 {
+    Q_UNUSED(event);
     QPainter painter(this);
     painter.fillRect(this->rect(), QColor(0, 0, 0, 200));  //QColor最后一个参数80代表背景的透明度
 }

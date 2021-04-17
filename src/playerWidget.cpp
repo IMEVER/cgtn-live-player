@@ -13,21 +13,21 @@
 #include <QMimeData>
 #include <QVariant>
 
-PlayerWidget::PlayerWidget(QWidget *parent): QWidget(parent)
+PlayerWidget::PlayerWidget(bool sideShow, QWidget *parent): QWidget(parent)
 {
     this->parent = parent;
-    QStackedLayout *layout = new QStackedLayout;
+    QStackedLayout *layout = new QStackedLayout(this);
     layout->setStackingMode(QStackedLayout::StackAll);
 
     setLayout(layout);
 
-    setStyleSheet("{background-color: rgba(0,0,0,255);}");
+    setStyleSheet("background-color: rgba(0,0,0,255);");
 
     volumeLabel = new QLabel(QString::number(50), this);
     volumeLabel->setFixedSize(QSize(140, 100));
     volumeLabel->setAlignment(Qt::AlignCenter);
     volumeLabel->setAutoFillBackground(true);
-    volumeLabel->setStyleSheet("QLabel {border: 1px solid black; border-radius: 10px; font-size: 80px; color: white; background-color: rgba(0, 0, 0, 200) }");
+    volumeLabel->setStyleSheet("QLabel {border: 1px solid black; border-radius: 10px; font-size: 80px; color: white; background-color: rgba(0, 0, 0, 200); }");
     // QPalette palette;
     // palette.setColor(QPalette::Background, QColor::fromRgba64(0, 0, 0, 100));
     // volumeLabel->setPalette(palette);
@@ -36,18 +36,18 @@ PlayerWidget::PlayerWidget(QWidget *parent): QWidget(parent)
     playButton = new QPushButton(this);
     playButton->setFixedSize(QSize(128, 128));
     playButton->setFocusPolicy(Qt::NoFocus);
-    playButton->setStyleSheet("border-image:url(:/resource/loading.gif); border: 1px solid black; border-radius: 10px; font-size: 80px; color: white; background-color: rgba(0,0,0, 0.6)");
+    playButton->setStyleSheet("border-image:url(:/resource/loading.gif); border: 1px solid black; border-radius: 10px; font-size: 80px; color: white; background-color: rgba(0,0,0, 0.6); ");
     layout->addWidget(playButton);
 
     connect(playButton, &QPushButton::clicked, this, &PlayerWidget::toogle);
 
-    QVideoWidget *_videoWidget = new QVideoWidget;
+    QVideoWidget *_videoWidget = new QVideoWidget(this);
     _videoWidget->setAspectRatioMode(Qt::KeepAspectRatio);
     layout->addWidget(_videoWidget);
     _videoWidget->setMouseTracking(true);
     _videoWidget->setFocusPolicy(Qt::StrongFocus);
 
-    mediaPlayer = new QMediaPlayer(nullptr, (QMediaPlayer::StreamPlayback));
+    mediaPlayer = new QMediaPlayer(this, (QMediaPlayer::StreamPlayback));
     mediaPlayer->setPlaybackRate(1);
     mediaPlayer->setVideoOutput(_videoWidget);
     mediaPlayer->setVolume(50);
@@ -58,7 +58,7 @@ PlayerWidget::PlayerWidget(QWidget *parent): QWidget(parent)
         // media.isNull()
         Logger::instance().log("Change to another media source");
         setFocus();
-        if(!media.canonicalUrl().isLocalFile())
+        if(!media.request().url().isLocalFile())
         {
             updatePlay(loading);
         }
@@ -100,7 +100,7 @@ PlayerWidget::PlayerWidget(QWidget *parent): QWidget(parent)
     QObject::connect(mediaPlayer, SIGNAL(error(QMediaPlayer::Error)), this, SLOT(printError(QMediaPlayer::Error)));
 
 
-    initContextMenu();
+    initContextMenu(sideShow);
 
 
     setAcceptDrops(true);
@@ -108,16 +108,25 @@ PlayerWidget::PlayerWidget(QWidget *parent): QWidget(parent)
     volumeLabel->hide();
     playButton->hide();
     setMouseTracking(true);
+
+    volumeTimer = new QTimer(this);
+    volumeTimer->setSingleShot(true);
+    volumeTimer->setInterval(1500);
+    connect(volumeTimer, &QTimer::timeout, this, [ = ] {
+        volumeLabel->hide();
+        playButton->hide();
+    });
 }
 
 PlayerWidget::~PlayerWidget()
 {
+    disconnect(mediaPlayer);
     if (timerId > 0)
         killTimer(timerId);
 
-    if (volumeTimerId > 0)
+    if (volumeTimer->isActive())
     {
-        killTimer(volumeTimerId);
+        volumeTimer->stop();
     }
 }
 
@@ -136,7 +145,7 @@ void PlayerWidget::contextMenuEvent(QContextMenuEvent *event)
 }
 #endif // QT_NO_CONTEXTMENU
 
-void PlayerWidget::initContextMenu()
+void PlayerWidget::initContextMenu(bool sideShow)
 {
     contextMenu = new QMenu();
     QMenu *shortMenu = contextMenu->addMenu("快捷键");
@@ -190,13 +199,13 @@ void PlayerWidget::initContextMenu()
 
     contextMenu->addAction("拷贝当前播放地址", this, [=]() {
         QClipboard *clipboard = QApplication::clipboard();
-        clipboard->setText(mediaPlayer->media().canonicalUrl().url());
+        clipboard->setText(mediaPlayer->media().request().url().url());
         //QApplication::instance()->sendEvent(clipboard, new QEvent(QEvent::Clipboard));
     });
 
     QAction *sideAction = new QAction("侧边栏", this);
     sideAction->setCheckable(true);
-    sideAction->setChecked(true);
+    sideAction->setChecked(sideShow);
     // sideAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_S));
     connect(sideAction, &QAction::triggered, this, [=]() {
         emit toggleFilterWidget();
@@ -237,13 +246,12 @@ void PlayerWidget::updateVolume(int volume)
 
 void PlayerWidget::showVolumeLabel()
 {
+    if (volumeTimer->isActive())
+    {
+        volumeTimer->stop();
+    }
     if (!playButton->isHidden())
     {
-        if (volumeTimerId > 0)
-        {
-            killTimer(volumeTimerId);
-            volumeTimerId = 0;
-        }
         playButton->hide();
     }
 
@@ -251,13 +259,9 @@ void PlayerWidget::showVolumeLabel()
     {
         volumeLabel->show();
         Logger::instance().log("x: " + std::to_string(volumeLabel->x()) + " y: " + std::to_string(volumeLabel->y()));
-        if (volumeTimerId > 0)
-        {
-            killTimer(volumeTimerId);
-        }
-        volumeTimerId = startTimer(1500);
     }
     volumeLabel->move((size().width() - volumeLabel->width()) / 2, (size().height() - volumeLabel->height()) / 2);
+    volumeTimer->start();
 }
 
 PlayerWidget::PlayStatus PlayerWidget::getPlayStatus()
@@ -280,7 +284,7 @@ void PlayerWidget::updatePlay(PlayStatus status, int percent)
                 img = "pause.png";
                 break;
             case loading:
-                img = "loading.gif";                
+                img = "loading.gif";
                 break;
             case stopped:
                 img = "play.png";
@@ -311,28 +315,20 @@ void PlayerWidget::updatePlay(PlayStatus status, int percent)
 
             playButton->hide();
 
-            if (volumeTimerId > 0)
-            {
-                killTimer(volumeTimerId);
-                volumeTimerId = 0;
-            }            
+            volumeTimer->stop();
         }
         else
         {
             showPlayButton();
-        }        
+        }
     }
 }
 
 void PlayerWidget::showPlayButton()
 {
+    volumeTimer->stop();
     if (!volumeLabel->isHidden())
     {
-        if (volumeTimerId > 0)
-        {
-            killTimer(volumeTimerId);
-            volumeTimerId = 0;
-        }
         volumeLabel->hide();
     }
 
@@ -340,19 +336,12 @@ void PlayerWidget::showPlayButton()
     if(playButton->isHidden())
     {
         playButton->show();
-
-        if (status == playing && volumeTimerId == 0)
-        {
-            volumeTimerId = startTimer(5000);
-        }
     }
 
-    playButton->move((size().width() - playButton->width()) / 2, (size().height() - playButton->height()) / 2);        
-    
-    if ((status == loading || status == stopped) && volumeTimerId > 0)
+    playButton->move((size().width() - playButton->width()) / 2, (size().height() - playButton->height()) / 2);
+    if (status == playing)
     {
-        killTimer(volumeTimerId);
-        volumeTimerId = 0;
+        volumeTimer->start();
     }
 }
 
@@ -377,7 +366,7 @@ void PlayerWidget::setMediaUrl(QUrl url)
 
 QUrl PlayerWidget::getMediaUrl()
 {
-    return mediaPlayer->media().canonicalUrl();
+    return mediaPlayer->media().request().url();
 }
 
 void PlayerWidget::toogle()
@@ -494,7 +483,7 @@ bool PlayerWidget::event(QEvent *event)
             else
             {
                 return false;
-            }            
+            }
             return true;
     }
     return QWidget::event(event);
@@ -506,7 +495,7 @@ void PlayerWidget::printError(QMediaPlayer::Error error)
     QDebug(&str) << "Player error: " << error;
     QDebug(&str) << "\r\n\tPlayer status: " << mediaPlayer->state();
     QDebug(&str) << "\r\n\tPlayer MediaStatus: " << mediaPlayer->mediaStatus();
-    QDebug(&str) << "\r\n\tSrc: " << mediaPlayer->media().canonicalUrl().url();
+    QDebug(&str) << "\r\n\tSrc: " << mediaPlayer->media().request().url().url();
     Logger::instance().log(str.toStdString(), Logger::kLogLevelError);
     mediaPlayer->play();
 }
@@ -628,21 +617,7 @@ void PlayerWidget::resizeEvent(QResizeEvent *event)
 
 void PlayerWidget::timerEvent(QTimerEvent *event)
 {
-    if (event->timerId() == volumeTimerId)
-    {
-        killTimer(volumeTimerId);
-        volumeTimerId = 0;
-        if (!volumeLabel->isHidden())
-        {
-            volumeLabel->hide();
-        }
-        if (!playButton->isHidden())
-        {
-            playButton->hide();
-            playButton->hide();
-        }
-    }
-    else if (event->timerId() == timerId && !pressing)
+    if (event->timerId() == timerId && !pressing)
     {
         qint64 now = QDateTime::currentMSecsSinceEpoch();
         killTimer(timerId);

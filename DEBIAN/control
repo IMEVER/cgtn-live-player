@@ -5,5 +5,6 @@ Maintainer: IMEVER <Hobart_Tian@imever.me>
 Section: video
 Priority: optional
 Installed-Size: #SIZE#
-depends: libqgsttools-p1
-description: 央视外语频道的播放器
+depends: libc6, libqgsttools-p1
+description: 央视外语频道的播放器, 支持多个央视和省电视台
+ 一款为Linux系统用户开发的央视电台播放器。
