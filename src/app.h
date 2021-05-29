@@ -2,13 +2,11 @@
 #define APP_H
 
 #include "player.h"
-#include "conf.h"
 
 class App
 {
 public:
     Player *player;
-    Conf *conf;
 
 public:
     App();

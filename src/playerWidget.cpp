@@ -2,6 +2,7 @@
 #include <QStackedLayout>
 
 #include "logger.h"
+#include "channelconf.h"
 #include "conf.h"
 
 #include <QVideoWidget>
@@ -23,7 +24,7 @@ PlayerWidget::PlayerWidget(bool sideShow, QWidget *parent): QWidget(parent)
 
     setStyleSheet("background-color: rgba(0,0,0,255);");
 
-    volumeLabel = new QLabel(QString::number(50), this);
+    volumeLabel = new QLabel(QString::number(Conf::instance()->volume()), this);
     volumeLabel->setFixedSize(QSize(140, 100));
     volumeLabel->setAlignment(Qt::AlignCenter);
     volumeLabel->setAutoFillBackground(true);
@@ -50,7 +51,7 @@ PlayerWidget::PlayerWidget(bool sideShow, QWidget *parent): QWidget(parent)
     mediaPlayer = new QMediaPlayer(this, (QMediaPlayer::StreamPlayback));
     mediaPlayer->setPlaybackRate(1);
     mediaPlayer->setVideoOutput(_videoWidget);
-    mediaPlayer->setVolume(50);
+    mediaPlayer->setVolume(Conf::instance()->volume());
 
     ratio = static_cast<qreal>(404.7) / 720;
 
@@ -162,11 +163,11 @@ void PlayerWidget::initContextMenu(bool sideShow)
 
     bool isFirst = true;
     int groupIndex = 0;
-    foreach (Group *group, *Conf::instance()->getJsonConf().groups)
+    foreach (Group *group, *ChannelConf::instance()->getJsonConf().groups)
     {
         for (int tvIndex = 0, len = group->tvs->size(); tvIndex < len; tvIndex++)
         {
-            Item *tv = group->tvs->at(tvIndex);
+            Channel *tv = group->tvs->at(tvIndex);
             QAction *action = new QAction(tv->title, this);
             QVector<int> indexes(2);
             indexes[0] = groupIndex;
@@ -240,6 +241,7 @@ void PlayerWidget::updateVolume(int volume)
     {
         volumeLabel->setProperty("volume", volume);
         volumeLabel->setText(QString::number(volume));
+        Conf::instance()->setVolume(volume);
     }
     showVolumeLabel();
 }
@@ -347,7 +349,7 @@ void PlayerWidget::showPlayButton()
 
 void PlayerWidget::loadTv(int groupIndex, int tvIndex)
 {
-    Item *url = Conf::instance()->getJsonConf().groups->at(groupIndex)->tvs->at(tvIndex);
+    Channel *url = ChannelConf::instance()->getJsonConf().groups->at(groupIndex)->tvs->at(tvIndex);
     mediaPlayer->setMedia(QMediaContent(QUrl(url->url)));
     parent->setWindowTitle("央视外语频道: " + url->title);
     Logger::instance().log("Switch to tv " + url->title.toStdString() + "\t" + url->url.toStdString(), Logger::kLogLevelInfo);

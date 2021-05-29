@@ -2,7 +2,7 @@
 
 #include <QVBoxLayout>
 #include <QLineEdit>
-#include "conf.h"
+#include "channelconf.h"
 
 FilterWidget::FilterWidget(QWidget *parent): QWidget(parent)
 {
@@ -34,11 +34,11 @@ FilterWidget::FilterWidget(QWidget *parent): QWidget(parent)
     QStandardItem *root = model->invisibleRootItem();
 
     int groupIndex = 0;
-    foreach (const Group *group, *Conf::instance()->getJsonConf().groups)
+    foreach (const Group *group, *ChannelConf::instance()->getJsonConf().groups)
     {
         int tvIndex = 0;
         QStandardItem *groupItem = new QStandardItem(group->name + "(" + QString::number(group->tvs->size()) + ")");
-        foreach (const Item *item, *group->tvs)
+        foreach (const Channel *item, *group->tvs)
         {
             QStandardItem *tvItem = new QStandardItem(item->title);
             QVector<int> indexes(2);
@@ -82,10 +82,10 @@ FilterWidget::~FilterWidget()
 
 void FilterWidget::updateGroupName(int index)
 {
-    model->item(index, 0)->setText(Conf::instance()->getGroupList()->at(index));
+    model->item(index, 0)->setText(ChannelConf::instance()->getGroupList()->at(index));
 }
 
 void FilterWidget::updateTvTitle(int groupIndex, int tvIndex)
 {
-    model->item(groupIndex, 0)->child(tvIndex, 0)->setText(Conf::instance()->getJsonConf().groups->at(groupIndex)->tvs->at(tvIndex)->title);
+    model->item(groupIndex, 0)->child(tvIndex, 0)->setText(ChannelConf::instance()->getJsonConf().groups->at(groupIndex)->tvs->at(tvIndex)->title);
 }

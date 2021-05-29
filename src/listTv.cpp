@@ -10,7 +10,7 @@
 #include <QItemDelegate>
 #include <QComboBox>
 
-#include "conf.h"
+#include "channelconf.h"
 #include "listGroup.h"
 #include "logger.h"
 
@@ -55,7 +55,7 @@ public:
         QComboBox *comboBox = static_cast<QComboBox *>(editor);
         QString text = comboBox->currentText();
         model->setData(index, text, Qt::EditRole);
-        int toIndex = Conf::instance()->updateTvGroup(index.row(), text);
+        int toIndex = ChannelConf::instance()->updateTvGroup(index.row(), text);
         if (toIndex != -1)
         {
             // model->moveRow(index.parent(), index.row(), model->index(toIndex, 0).parent(), toIndex);
@@ -90,7 +90,7 @@ ListTvWindow::ListTvWindow(QWidget *parent) : QMainWindow(parent)
         listGroup->show();
 
         connect(listGroup, &ListGroup::groupNameChanged, [=](const int index) {
-            QList<Group *> *list = Conf::instance()->getJsonConf().groups;
+            QList<Group *> *list = ChannelConf::instance()->getJsonConf().groups;
             int startIndex = 0, endIndex = 0, i = 0;
             while (i < index)
             {
@@ -122,7 +122,7 @@ ListTvWindow::ListTvWindow(QWidget *parent) : QMainWindow(parent)
                 model->insertRow(row - 1, model->takeRow(row));
                 tableView->setCurrentIndex(model->index(row -1, 0));
                 tableView->selectRow(row -1);
-                Conf::instance()->moveUp(row);
+                ChannelConf::instance()->moveUp(row);
             }
         }
     });
@@ -141,7 +141,7 @@ ListTvWindow::ListTvWindow(QWidget *parent) : QMainWindow(parent)
                 model->insertRow(row + 1, model->takeRow(row));
                 tableView->setCurrentIndex(model->index(row + 1, 0));
                 tableView->selectRow(row + 1);
-                Conf::instance()->moveDown(row);
+                ChannelConf::instance()->moveDown(row);
             }
         }
     });
@@ -153,7 +153,7 @@ ListTvWindow::ListTvWindow(QWidget *parent) : QMainWindow(parent)
     tableView->setSelectionBehavior(QTableView::SelectRows);
     tableView->setSelectionMode(QTableView::SingleSelection);
 
-    tableView->setItemDelegateForColumn(1, new GroupDelegate(tableView, Conf::instance()->getGroupList()));
+    tableView->setItemDelegateForColumn(1, new GroupDelegate(tableView, ChannelConf::instance()->getGroupList()));
 
     model = new QStandardItemModel(this);
     model->setColumnCount(3);
@@ -162,10 +162,10 @@ ListTvWindow::ListTvWindow(QWidget *parent) : QMainWindow(parent)
     model->setHeaderData(2, Qt::Horizontal, "网址");
 
     int groupIndex = 0, row = 0;
-    foreach (const Group *group, *Conf::instance()->getJsonConf().groups)
+    foreach (const Group *group, *ChannelConf::instance()->getJsonConf().groups)
     {
         int tvIndex = 0;
-        foreach (const Item *item, *group->tvs)
+        foreach (const Channel *item, *group->tvs)
         {
             QStandardItem *titleItem = new QStandardItem(item->title);
             // QVector<int> indexes(2);
@@ -199,7 +199,7 @@ ListTvWindow::ListTvWindow(QWidget *parent) : QMainWindow(parent)
         Q_UNUSED(hint);
         QString content = reinterpret_cast<QLineEdit *>(editor)->text();
         QModelIndex indexModel = tableView->currentIndex();
-        Conf *conf = Conf::instance();
+        ChannelConf *conf = ChannelConf::instance();
 
         int indexTv = indexModel.row();
         int indexGroup = 0;
@@ -216,7 +216,7 @@ ListTvWindow::ListTvWindow(QWidget *parent) : QMainWindow(parent)
             }
         }
 
-        Item *tv = conf->getJsonConf().groups->at(indexGroup)->tvs->at(indexTv);
+        Channel *tv = conf->getJsonConf().groups->at(indexGroup)->tvs->at(indexTv);
         switch (indexModel.column())
         {
         case 0:

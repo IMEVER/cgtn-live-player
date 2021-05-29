@@ -1,6 +1,6 @@
 .PHONY:deb clean
 
-VERSION=3.2.2
+VERSION=3.2.3
 PREFIX = /opt/apps/me.imever.cgtn-live-player
 DESTDIR = dist
 BUILDDIR = build

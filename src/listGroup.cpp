@@ -8,7 +8,7 @@
 #include <QtGui>
 #include <QApplication>
 #include <QDesktopWidget>
-#include "conf.h"
+#include "channelconf.h"
 #include "logger.h"
 
 ListGroup::ListGroup(QWidget *parent) : QMainWindow(parent)
@@ -38,7 +38,7 @@ ListGroup::ListGroup(QWidget *parent) : QMainWindow(parent)
     listWidget->setSelectionMode(QTableWidget::SingleSelection);
     listWidget->setEditTriggers(QListWidget::DoubleClicked);
 
-    foreach(QString group, *Conf::instance()->getGroupList())
+    foreach(QString group, *ChannelConf::instance()->getGroupList())
     {
         listWidget->addItem(group);
     }
@@ -52,7 +52,7 @@ ListGroup::ListGroup(QWidget *parent) : QMainWindow(parent)
         Q_UNUSED(hint);
         QString groupName = reinterpret_cast<QLineEdit *>(editor)->text();
         int row = listWidget->currentRow();
-        Conf *conf = Conf::instance();
+        ChannelConf *conf = ChannelConf::instance();
 
         if (row <= conf->getGroupList()->size() -1 && groupName.compare(conf->getGroupList()->at(row)) == 0)
         {

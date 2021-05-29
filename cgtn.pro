@@ -31,6 +31,7 @@ SOURCES += src/main.cpp\
     src/about.cpp \
     src/player.cpp \
     src/aboutdialog.cpp \
+    src/channelconf.cpp \
     src/conf.cpp \
     src/listTv.cpp \
     src/listGroup.cpp \
@@ -43,6 +44,7 @@ HEADERS  += src/mainwindow.h \
     src/about.h \
     src/player.h \
     src/aboutdialog.h \
+    src/channelconf.h \
     src/conf.h \
     src/listTv.h \
     src/listGroup.h \

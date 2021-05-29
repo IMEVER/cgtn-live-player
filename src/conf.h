@@ -1,75 +1,27 @@
 #ifndef CONF_H
 #define CONF_H
 
-#include <QString>
-
-struct Item
-{
-    QString title;
-    QString url;
-
-    public:
-    
-    Item(QString title, QString url)
-    {
-        this->title = title;
-        this->url = url;
-    }
-};
-
-struct Group
-{
-    QString name;
-    QList<Item *> *tvs;
-
-    public:
-    Group(QString name, QList<Item *> *tvs)
-    {
-        this->name = name;
-        this->tvs = tvs;
-    }
-};
-
-struct JsonConf
-{
-    QString version;
-    QString name;
-    QString date;
-    QString author;
-    QList<Group *> *groups;
-};
-
-// extern JsonConf conf;
+#include <QSettings>
 
 class Conf
 {
 private:
+    QSettings *settings;
+    bool dirty;
     static Conf *pInstance;
-    JsonConf conf;
-    QStringList *groupList;
-    bool dirty = false;
+
+    Conf(/* args */);
+    void setDirty(){dirty=true;}
 
 public:
     static Conf *instance();
-    JsonConf getJsonConf();
-    QStringList *getGroupList();
-    void addGroup(QString groupName);
-    void editGroupName(int index, QString groupName);
-    int updateTvGroup(int tvIndex, QString toGroup);
-    void moveUp(int index);
-    void moveDown(int index);
-    void setDirty();
-    bool isDirty();
-    void save();
-    
-    virtual ~Conf();
+    ~Conf();
 
-private:
-    Conf(/* args */);
+    bool isSidebarShow();
+    void setSidebarShow(bool isShow);
 
-    void addGroup(QString groupName, QList<Item *> *itemList);
-    void init();
-    void loadTvVector();
+    int volume();
+    void setVolume(int volume);
 };
 
-#endif // CONF_H
+#endif

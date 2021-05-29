@@ -14,6 +14,7 @@
 #include <QStandardPaths>
 // #include <QGraphicsBlurEffect>
 
+#include "channelconf.h"
 #include "conf.h"
 #include "logger.h"
 
@@ -22,8 +23,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     // QGraphicsBlurEffect *effect = new QGraphicsBlurEffect(this);
 
     // setGraphicsEffect(effect);
-
-    settings = new QSettings(QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation) + "/setting.ini", QSettings::IniFormat, this);
 
     QHBoxLayout *layout = new QHBoxLayout();
     layout->setMargin(0);
@@ -40,14 +39,14 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     filterWidget->setContentsMargins(0, 0, 0, 0);
     filterWidget->setFixedWidth(160);
 
-    filterWidget->setVisible(settings->value("side/isShow", true).toBool());
+    filterWidget->setVisible(Conf::instance()->isSidebarShow());
 
     connect(filterWidget, &FilterWidget::tvItemDoubleClicked, [=](int groupIndex, int tvIndex){
         _playerWidget->loadTv(groupIndex, tvIndex);
     });
     layout->addWidget(filterWidget);
 
-    _playerWidget = new PlayerWidget(settings->value("side/isShow", true).toBool(), this);
+    _playerWidget = new PlayerWidget(Conf::instance()->isSidebarShow(), this);
     connect(_playerWidget, &PlayerWidget::menuTrigger, [=](int id){
         emit openWindowTrigger(id);
     });
@@ -55,8 +54,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
         bool isShow = !filterWidget->isHidden();
         filterWidget->setHidden(isShow);
         (menuBar()->actions().at(2)->menu())->actions()[0]->setChecked(!isShow);
-        settings->setValue("side/isSHow", !isShow);
-        settings->sync();
+        Conf::instance()->setSidebarShow(!isShow);
     });
     layout->addWidget(_playerWidget);
 
@@ -114,13 +112,13 @@ void MainWindow::initMenubar()
 
     bool isFirst = true;
     int groupIndex = 0;
-    foreach (Group *group, *Conf::instance()->getJsonConf().groups)
+    foreach (Group *group, *ChannelConf::instance()->getJsonConf().groups)
     {
         // tvMenu->addSection(group->name)->setText(QString("----?----").arg(group->name));
         tvMenu->addAction(group->name)->setEnabled(false);
         for (int tvIndex = 0, len = group->tvs->size(); tvIndex < len; tvIndex++)
         {
-            Item *tv = group->tvs->at(tvIndex);
+            Channel *tv = group->tvs->at(tvIndex);
             QAction *action = new QAction("    " + tv->title, this);
             QVector<int> indexes(2);
             indexes[0] = groupIndex;
@@ -146,12 +144,11 @@ void MainWindow::initMenubar()
 
     QAction *sideBarAction = new QAction("侧边栏(S)");
     sideBarAction->setCheckable(true);
-    sideBarAction->setChecked(settings->value("side/isShow", true).toBool());
+    sideBarAction->setChecked(Conf::instance()->isSidebarShow());
     connect(sideBarAction, &QAction::triggered, this, [this](bool checked){
         filterWidget->setHidden(!checked);
         _playerWidget->setSideActionMenuChecked(checked);
-        settings->setValue("side/isShow", checked);
-        settings->sync();
+        Conf::instance()->setSidebarShow(checked);
     });
     option->addAction(sideBarAction);
 

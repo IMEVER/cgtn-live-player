@@ -1,20 +1,18 @@
 #include "app.h"
+#include "conf.h"
+#include "channelconf.h"
 
 App::App()
 {
-    conf = Conf::instance();
     player = new Player();
     player->bind();
 }
 
 App::~App()
 {
-    if (conf->isDirty())
-    {
-        conf->save();
-    }
-    delete conf;
+    delete ChannelConf::instance();
     delete player;
+    delete Conf::instance();
 }
 
 void App::run()
