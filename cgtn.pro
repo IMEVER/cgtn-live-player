@@ -6,11 +6,14 @@
 
 # libgstreamer-plugins-bad0.10-0
 
-QT       += core gui multimediawidgets multimedia gui-private
+QT       += core gui gui-private dbus
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-include(singleapplication/singleapplication.pri)
+include(lib/singleapplication/singleapplication.pri)
+
+DEFINES += MEDIA_MPV
+include(lib/media/media.pri)
 
 DEFINES += QAPPLICATION_CLASS=QApplication
 
@@ -35,7 +38,8 @@ SOURCES += src/main.cpp\
     src/conf.cpp \
     src/listTv.cpp \
     src/listGroup.cpp \
-    src/logger.cpp
+    src/logger.cpp \
+    src/mpris.cpp
 
 HEADERS  += src/mainwindow.h \
     src/playerWidget.h \
@@ -48,9 +52,9 @@ HEADERS  += src/mainwindow.h \
     src/conf.h \
     src/listTv.h \
     src/listGroup.h \
-    src/logger.h
+    src/logger.h \
+    src/mpris.h
 
-DISTFILES +=
 FORMS +=
 
 RESOURCES += \

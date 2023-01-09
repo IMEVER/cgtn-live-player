@@ -1,11 +1,9 @@
 #include "playerWidget.h"
-#include <QStackedLayout>
-
+#include "mainwindow.h"
 #include "logger.h"
 #include "channelconf.h"
 #include "conf.h"
-
-#include <QVideoWidget>
+#include <QVBoxLayout>
 #include <QTimerEvent>
 #include <QDateTime>
 #include <QApplication>
@@ -13,122 +11,72 @@
 #include <QClipboard>
 #include <QMimeData>
 #include <QVariant>
+#include <QStyleOption>
+#include <QStyle>
 
-PlayerWidget::PlayerWidget(bool sideShow, QWidget *parent): QWidget(parent)
+PlayerWidget::PlayerWidget(QWidget *parent): QWidget(parent)
 {
     this->parent = parent;
-    QStackedLayout *layout = new QStackedLayout(this);
-    layout->setStackingMode(QStackedLayout::StackAll);
 
-    setLayout(layout);
+    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    setStyleSheet("background-color: rgba(28,28,28,255);");
 
-    setStyleSheet("background-color: rgba(0,0,0,255);");
+    QVBoxLayout *layout = new QVBoxLayout(this);
+    layout->setContentsMargins(QMargins(0, 0, 0, 0));
 
     volumeLabel = new QLabel(QString::number(Conf::instance()->volume()), this);
-    volumeLabel->setFixedSize(QSize(140, 100));
+    volumeLabel->setFixedSize(QSize(150, 100));
     volumeLabel->setAlignment(Qt::AlignCenter);
-    volumeLabel->setAutoFillBackground(true);
     volumeLabel->setStyleSheet("QLabel {border: 1px solid black; border-radius: 10px; font-size: 80px; color: white; background-color: rgba(0, 0, 0, 200); }");
-    // QPalette palette;
-    // palette.setColor(QPalette::Background, QColor::fromRgba64(0, 0, 0, 100));
-    // volumeLabel->setPalette(palette);
-    layout->addWidget(volumeLabel);
 
     playButton = new QPushButton(this);
     playButton->setFixedSize(QSize(128, 128));
     playButton->setFocusPolicy(Qt::NoFocus);
-    playButton->setStyleSheet("border-image:url(:/resource/loading.gif); border: 1px solid black; border-radius: 10px; font-size: 80px; color: white; background-color: rgba(0,0,0, 0.6); ");
-    layout->addWidget(playButton);
-
+    playButton->setStyleSheet("QPushButton {border-image:url(:/resource/loading.gif); border: 1px solid black; border-radius: 10px; font-size: 80px; color: white; background-color: rgba(0,0,0, 100);} ");
     connect(playButton, &QPushButton::clicked, this, &PlayerWidget::toogle);
 
-    QVideoWidget *_videoWidget = new QVideoWidget(this);
-    _videoWidget->setAspectRatioMode(Qt::KeepAspectRatio);
-    layout->addWidget(_videoWidget);
-    _videoWidget->setMouseTracking(true);
-    _videoWidget->setFocusPolicy(Qt::StrongFocus);
+    m_cover = new QLabel(this);
+    m_cover->setStyleSheet("QLabel { background-color: rgba(0, 0, 0, 0); }");
+    m_cover->installEventFilter(this);
+    m_cover->setMouseTracking(true);
 
-    mediaPlayer = new QMediaPlayer(this, (QMediaPlayer::StreamPlayback));
-    mediaPlayer->setPlaybackRate(1);
-    mediaPlayer->setVideoOutput(_videoWidget);
-    mediaPlayer->setVolume(Conf::instance()->volume());
-
-    ratio = static_cast<qreal>(404.7) / 720;
-
-    connect(mediaPlayer, static_cast<void (QMediaPlayer::*)(const QMediaContent &)>(&QMediaPlayer::mediaChanged), [=](const QMediaContent &media) {
-        // media.isNull()
-        Logger::instance().log("Change to another media source");
-        setFocus();
-        if(!media.request().url().isLocalFile())
-        {
-            updatePlay(loading);
-        }
-    });
-    connect(mediaPlayer, static_cast<void (QMediaObject::*)(const QString &, const QVariant &)>(&QMediaObject::metaDataChanged),
-            [=](const QString &key, const QVariant &value) {
-                if (key == "Resolution")
-                {
-                    QSize size = value.toSize();
-                    Logger::instance().log("Video resolution by Width: " + std::to_string(size.width()) + ", Height: " + std::to_string(size.height()));
-                    updatePlay(playing);
-                    mediaPlayer->play();
-                }
-            });
-    connect(mediaPlayer, static_cast<void (QMediaPlayer::*)(bool bavial)>(&QMediaPlayer::videoAvailableChanged), [=](bool bavial) {
-        if (bavial)
-        {
-            Logger::instance().log("Start loading video");
-        }
-        else
-        {
-            Logger::instance().log("Video not available");
-            // showPlayButton();
-        }
-    });
-    connect(mediaPlayer, static_cast<void (QMediaPlayer::*)(int percent)>(&QMediaPlayer::bufferStatusChanged), [=](int percent) {
-        if (percent < 100)
-        {
-            Logger::instance().log("Loading " + std::to_string(percent) + "%");
-            updatePlay(loading, percent);
-        }
-        else
-        {
-            mediaPlayer->play();
-            Logger::instance().log("Loading buffer 100%, now playing");
-            updatePlay(playing);
-        }
-    });
-    QObject::connect(mediaPlayer, SIGNAL(error(QMediaPlayer::Error)), this, SLOT(printError(QMediaPlayer::Error)));
-
-
-    initContextMenu(sideShow);
-
-
+    initContextMenu();
     setAcceptDrops(true);
-
-    volumeLabel->hide();
-    playButton->hide();
     setMouseTracking(true);
 
     volumeTimer = new QTimer(this);
     volumeTimer->setSingleShot(true);
     volumeTimer->setInterval(1500);
-    connect(volumeTimer, &QTimer::timeout, this, [ = ] {
-        volumeLabel->hide();
-        playButton->hide();
+    connect(volumeTimer, &QTimer::timeout, this, [ this ] {
+        volumeLabel->lower();
+        playButton->lower();
     });
 }
 
 PlayerWidget::~PlayerWidget()
 {
-    disconnect(mediaPlayer);
+    disconnect(m_media);
     if (timerId > 0)
         killTimer(timerId);
+}
 
-    if (volumeTimer->isActive())
-    {
-        volumeTimer->stop();
-    }
+void PlayerWidget::setMedia(Media *media)
+{
+    this->m_media = media;
+
+    layout()->addWidget(m_media->videoWidget());
+//    m_media->videoWidget()->installEventFilter(this);
+
+    m_media->setVolume(Conf::instance()->volume()/100.0);
+
+    connect(m_media, &Media::sourceChanged, [this] {
+        Logger::instance().log("Change to another media source");
+        setFocus();
+    });
+    connect(m_media, &Media::stateChanged, this, &PlayerWidget::updatePlay);
+
+    QObject::connect(m_media, SIGNAL(error(const QString)), this, SLOT(printError(QString)));
+    m_cover->raise();
 }
 
 #ifndef QT_NO_CONTEXTMENU
@@ -141,96 +89,31 @@ void PlayerWidget::contextMenuEvent(QContextMenuEvent *event)
     bool hasUrl = !url.isEmpty() && !url.isNull() && url.startsWith("http");
 
     contextMenu->actions()[2]->setDisabled(!hasUrl);
+    contextMenu->actions().at(3)->setDisabled(m_media->file().isEmpty());
 
     contextMenu->exec(event->globalPos());
 }
 #endif // QT_NO_CONTEXTMENU
 
-void PlayerWidget::initContextMenu(bool sideShow)
+void PlayerWidget::initContextMenu()
 {
     contextMenu = new QMenu();
-    QMenu *shortMenu = contextMenu->addMenu("快捷键");
-    shortMenu->addAction("Up | Down => 音量调节");
-    shortMenu->addAction("F | DbClick => 全屏切换");
-    shortMenu->addAction("F11 => 进入全屏");
-    shortMenu->addAction("Esc => 退出全屏");
-    shortMenu->addAction("P | Space | Click => 暂停播放");
-    shortMenu->addAction("M => 静音");
-    shortMenu->addAction("S => 侧边栏");
+    contextMenu->addAction(qobject_cast<MainWindow*>(parent)->getAction("shortcut"));
+    contextMenu->addAction(qobject_cast<MainWindow*>(parent)->getAction("tv"));
 
-    QMenu *tvMenu = contextMenu->addMenu("电台");
-    QActionGroup *groups = new QActionGroup(this);
+    contextMenu->addAction(qobject_cast<MainWindow*>(parent)->getAction("pasteUrl"));
 
-    bool isFirst = true;
-    int groupIndex = 0;
-    foreach (Group *group, *ChannelConf::instance()->getJsonConf().groups)
-    {
-        for (int tvIndex = 0, len = group->tvs->size(); tvIndex < len; tvIndex++)
-        {
-            Channel *tv = group->tvs->at(tvIndex);
-            QAction *action = new QAction(tv->title, this);
-            QVector<int> indexes(2);
-            indexes[0] = groupIndex;
-            indexes[1] = tvIndex;
-            action->setData(QVariant::fromValue(indexes));
-            action->setCheckable(true);
-            if (isFirst)
-            {
-                action->setChecked(true);
-                isFirst = false;
-            }
-            groups->addAction(action);
-            tvMenu->addAction(action);
-        }
-        // tvMenu->addSeparator();
-        tvMenu->addSection(group->name);
-        groupIndex++;
-    }
-    connect(tvMenu, SIGNAL(triggered(QAction *)), this, SLOT(switchTv(QAction *)));
-
-    contextMenu->addAction("粘贴在线播放地址", this, [=]() {
-        QClipboard *clipboard = QApplication::clipboard();
-        QString url = clipboard->text(QClipboard::Clipboard);
-        if (!url.isEmpty() && !url.isNull())
-        {
-            mediaPlayer->setMedia(QUrl(url));
-            Logger::instance().log("Switch to tv " + url.toStdString(), Logger::kLogLevelInfo);
-        }
-    });
-
-    contextMenu->addAction("拷贝当前播放地址", this, [=]() {
-        QClipboard *clipboard = QApplication::clipboard();
-        clipboard->setText(mediaPlayer->media().request().url().url());
-        //QApplication::instance()->sendEvent(clipboard, new QEvent(QEvent::Clipboard));
-    });
-
-    QAction *sideAction = new QAction("侧边栏", this);
-    sideAction->setCheckable(true);
-    sideAction->setChecked(sideShow);
-    // sideAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_S));
-    connect(sideAction, &QAction::triggered, this, [=]() {
-        emit toggleFilterWidget();
-    });
-    contextMenu->addAction(sideAction);
+    contextMenu->addAction(qobject_cast<MainWindow*>(parent)->getAction("copyUrl"));
+    contextMenu->addAction(qobject_cast<MainWindow*>(parent)->getAction("sidebar"));
 
     // contextMenu->addAction("提示", this, [=](bool checked){
     //     toggleTopHint();
     // })->setCheckable(true);
 
-    contextMenu->addAction("编辑播放列表", this, [=](){
-        emit menuTrigger(2);
-    });
-
-    contextMenu->addAction("关于", this, [=]() {
-        emit menuTrigger(1);
-    });
+    contextMenu->addAction(qobject_cast<MainWindow*>(parent)->getAction("edit"));
+    contextMenu->addAction(qobject_cast<MainWindow*>(parent)->getAction("about"));
 
     contextMenu->setStyleSheet("border-radius: 5px; background-color: grey");
-}
-
-void PlayerWidget::setSideActionMenuChecked(bool checked)
-{
-    contextMenu->actions().at(4)->setChecked(checked);
 }
 
 void PlayerWidget::updateVolume(int volume)
@@ -248,75 +131,54 @@ void PlayerWidget::updateVolume(int volume)
 
 void PlayerWidget::showVolumeLabel()
 {
-    if (volumeTimer->isActive())
-    {
-        volumeTimer->stop();
-    }
-    if (!playButton->isHidden())
-    {
-        playButton->hide();
-    }
+    volumeTimer->stop();
 
-    if(volumeLabel->isHidden())
-    {
-        volumeLabel->show();
-        Logger::instance().log("x: " + std::to_string(volumeLabel->x()) + " y: " + std::to_string(volumeLabel->y()));
-    }
-    volumeLabel->move((size().width() - volumeLabel->width()) / 2, (size().height() - volumeLabel->height()) / 2);
+    playButton->lower();
+    volumeLabel->raise();
     volumeTimer->start();
 }
 
-PlayerWidget::PlayStatus PlayerWidget::getPlayStatus()
+void PlayerWidget::updatePlay(Media::State status)
 {
     QVariant v = playButton->property("status");
-    return v.isValid() ? (PlayStatus)v.toInt() : stopped;
-}
-
-void PlayerWidget::updatePlay(PlayStatus status, int percent)
-{
-    QVariant v = playButton->property("status");
-    PlayStatus oldStatus = v.isValid() ? (PlayStatus)v.toInt() : stopped;
+    Media::State oldStatus = v.isValid() ? (Media::State)v.toInt() : Media::StoppedState;
     if (oldStatus != status)
     {
         QString img;
         playButton->setProperty("status", status);
         switch (status)
         {
-            case playing:
+            case Media::PlayingState:
                 img = "pause.png";
                 break;
-            case loading:
+            case Media::LoadingState:
+            case Media::BufferingState:
                 img = "loading.gif";
                 break;
-            case stopped:
+            default:
                 img = "play.png";
                 break;
-            default:
-                break;
         }
-        playButton->setStyleSheet(QString("background-image:url(:/resource/%1);").arg(img));
+        playButton->setStyleSheet(QString("QPushButton {background-image:url(:/resource/%1); border: 1px solid black; border-radius: 10px; font-size: 80px; color: white; background-color: rgba(0,0,0, 100);} ").arg(img));
     }
 
-    if (status == loading)
-    {
+    if (status == Media::LoadingState || status == Media::BufferingState)
+    {/*
         v = playButton->property("percent");
         int oldPercent = v.isValid() ? v.toInt() : -1;
         if (oldPercent != percent)
         {
             playButton->setProperty("percent", percent);
             playButton->setText(QString::number(percent) + "%");
-        }
+        }*/
         showPlayButton();
     }
     else if(oldStatus != status)
     {
         playButton->setText("");
-        if (status == playing)
+        if (status == Media::PlayingState)
         {
-            playButton->hide();
-
-            playButton->hide();
-
+            playButton->lower();
             volumeTimer->stop();
         }
         else
@@ -329,28 +191,18 @@ void PlayerWidget::updatePlay(PlayStatus status, int percent)
 void PlayerWidget::showPlayButton()
 {
     volumeTimer->stop();
-    if (!volumeLabel->isHidden())
-    {
-        volumeLabel->hide();
-    }
+    volumeLabel->lower();
 
-    PlayStatus status = getPlayStatus();
-    if(playButton->isHidden())
-    {
-        playButton->show();
-    }
+    playButton->raise();
 
-    playButton->move((size().width() - playButton->width()) / 2, (size().height() - playButton->height()) / 2);
-    if (status == playing)
-    {
-        volumeTimer->start();
-    }
+    if (m_media->state() == Media::PlayingState)    
+        volumeTimer->start();    
 }
 
 void PlayerWidget::loadTv(int groupIndex, int tvIndex)
 {
     Channel *url = ChannelConf::instance()->getJsonConf().groups->at(groupIndex)->tvs->at(tvIndex);
-    mediaPlayer->setMedia(QMediaContent(QUrl(url->url)));
+    m_media->play(url->url);
     parent->setWindowTitle("央视外语频道: " + url->title);
     Logger::instance().log("Switch to tv " + url->title.toStdString() + "\t" + url->url.toStdString(), Logger::kLogLevelInfo);
 }
@@ -361,42 +213,45 @@ void PlayerWidget::switchTv(QAction *action)
     loadTv(ss[0], ss[1]);
 }
 
-void PlayerWidget::setMediaUrl(QUrl url)
+void PlayerWidget::setAudioOnly(bool audioOnly)
 {
-    mediaPlayer->setMedia(url);
-}
+    bool playing = m_media->state() == Media::PlayingState || m_media->state() == Media::PausedState || m_media->state() == Media::BufferingState;
+    QString url = m_media->file();
+    if(playing && !audioOnly)
+        m_media->stop();
 
-QUrl PlayerWidget::getMediaUrl()
-{
-    return mediaPlayer->media().request().url();
+    QTimer::singleShot(10, [this, playing, audioOnly, url]{
+        m_media->setAudioOnly(audioOnly);
+
+        if(playing && !audioOnly)
+            QTimer::singleShot(10, [this, url]{ m_media->play(url);});
+    });
 }
 
 void PlayerWidget::toogle()
 {
     Logger::instance().log("toggle play");
-    PlayStatus status = getPlayStatus();
-    if (status == playing || status == loading)
+    Media::State status = m_media->state();
+    if (status == Media::PlayingState || status == Media::BufferingState)
     {
-        mediaPlayer->pause();
-        updatePlay(stopped);
+        m_media->pause();
+    }
+    else if(m_media->file().isNull())
+    {
+        loadTv(0, 0);
     }
     else
     {
-        mediaPlayer->play();
-        updatePlay(playing);
+        m_media->play();
     }
 }
 
 void PlayerWidget::toggleFullscreen()
 {
-    if (isFullScreen())
-    {
-        showPlayNormal();
-    }
-    else
-    {
-        showPlayFullscreen();
-    }
+    if (isFullScreen())    
+        showPlayNormal();    
+    else    
+        showPlayFullscreen();    
 }
 
 void PlayerWidget::showPlayFullscreen()
@@ -441,15 +296,15 @@ bool PlayerWidget::event(QEvent *event)
             }
             else if (keyEvent->key() == Qt::Key_Up)
             {
-                if (getPlayStatus() == playing)
+                if (m_media->state() == Media::PlayingState)
                 {
-                    int volume = mediaPlayer->volume();
+                    int volume = m_media->volume() * 100;
                     if (volume < 100)
                     {
                         volume += 5;
                         if (volume > 100)
                             volume = 100;
-                        mediaPlayer->setVolume(volume);
+                        m_media->setVolume(volume/100.0);
                     }
                     updateVolume(volume);
                 }
@@ -457,22 +312,22 @@ bool PlayerWidget::event(QEvent *event)
             else if (keyEvent->key() == Qt::Key_Down)
             {
 
-                if (getPlayStatus() == playing)
+                if (m_media->state() == Media::PlayingState)
                 {
-                    int volume = mediaPlayer->volume();
+                    int volume = m_media->volume() * 100;
                     if (volume > 0)
                     {
                         volume -= 5;
                         if (volume < 0)
                             volume = 0;
-                        mediaPlayer->setVolume(volume);
+                        m_media->setVolume(volume/100.0);
                     }
                     updateVolume(volume);
                 }
             }
             else if (keyEvent->key() == Qt::Key_M)
             {
-                mediaPlayer->setMuted(!mediaPlayer->isMuted());
+                m_media->setVolumeMuted(!m_media->volumeMuted());
             }
             else if (keyEvent->key() == Qt::Key_P || keyEvent->key() == Qt::Key_Space)
             {
@@ -491,15 +346,26 @@ bool PlayerWidget::event(QEvent *event)
     return QWidget::event(event);
 }
 
-void PlayerWidget::printError(QMediaPlayer::Error error)
+bool PlayerWidget::eventFilter(QObject *watched, QEvent *event) {
+    if(watched == m_cover && event->type() == QEvent::MouseMove) {
+        QMouseEvent *e = dynamic_cast<QMouseEvent*>(event);
+        if (e->buttons().testFlag(Qt::LeftButton) == false) {
+            showPlayButton();
+            return true;
+        }
+    }
+    return QWidget::eventFilter(watched, event);
+}
+
+void PlayerWidget::printError(const QString &error)
 {
     QString str;
     QDebug(&str) << "Player error: " << error;
-    QDebug(&str) << "\r\n\tPlayer status: " << mediaPlayer->state();
-    QDebug(&str) << "\r\n\tPlayer MediaStatus: " << mediaPlayer->mediaStatus();
-    QDebug(&str) << "\r\n\tSrc: " << mediaPlayer->media().request().url().url();
+    QDebug(&str) << "\r\n\tPlayer status: " << m_media->state();
+//    QDebug(&str) << "\r\n\tPlayer MediaStatus: " << mediaPlayer->mediaStatus();
+    QDebug(&str) << "\r\n\tSrc: " << m_media->file();
     Logger::instance().log(str.toStdString(), Logger::kLogLevelError);
-    mediaPlayer->play();
+//    mediaPlayer->play();
 }
 
 
@@ -520,10 +386,10 @@ void PlayerWidget::mouseDoubleClickEvent(QMouseEvent *e)
 #ifndef QT_NO_WHEELEVENT
 void PlayerWidget::wheelEvent(QWheelEvent *event)
 {
-    if (getPlayStatus() == playing)
+    if (m_media->state() == Media::PlayingState)
     {
-        int volume = mediaPlayer->volume();
-        if (event->delta() < 0)
+        int volume = m_media->volume() * 100;
+        if (event->angleDelta().y() > 0)
         {
             volume -= 5;
         }
@@ -535,17 +401,23 @@ void PlayerWidget::wheelEvent(QWheelEvent *event)
             volume = 0;
         if (volume > 100)
             volume = 100;
-        mediaPlayer->setVolume(volume);
+        m_media->setVolume(volume/100.0);
         updateVolume(volume);
     }
 }
 #endif
 
+void PlayerWidget::enterEvent(QEvent *event)
+{
+    showPlayButton();
+    QWidget::enterEvent(event);
+}
+
 void PlayerWidget::leaveEvent(QEvent *event)
 {
-    Q_UNUSED(event);
-    if (getPlayStatus() == playing)
-        playButton->hide();
+    if (m_media->state() == Media::PlayingState)
+        playButton->lower();
+    QWidget::leaveEvent(event);
 }
 
 void PlayerWidget::mousePressEvent(QMouseEvent *event)
@@ -579,10 +451,8 @@ void PlayerWidget::mouseMoveEvent(QMouseEvent *event)
         parent->move(parent->pos() + (event->globalPos() - mLastMousePosition));
         mLastMousePosition = event->globalPos();
     }
-    else
-    {
-        showPlayButton();
-    }
+//    else
+//        showPlayButton();
 }
 
 void PlayerWidget::mouseReleaseEvent(QMouseEvent *event)
@@ -601,20 +471,25 @@ void PlayerWidget::dropEvent(QDropEvent *event)
 {
     if (event->mimeData()->hasText())
     {
-        QUrl url = QUrl(event->mimeData()->text());
-        mediaPlayer->setMedia(url);
-        Logger::instance().log("Switch to tv " + url.toString().toStdString(), Logger::kLogLevelInfo);
+        QString url = event->mimeData()->text();
+        m_media->play(url);
+        Logger::instance().log("Switch to tv " + url.toStdString(), Logger::kLogLevelInfo);
     }
 }
 
-void PlayerWidget::resizeEvent(QResizeEvent *event)
-{
-    Q_UNUSED(event);
-    if (playButton->isVisible())
-    {
-        playButton->hide();
-        showPlayButton();
-    }
+void PlayerWidget::paintEvent(QPaintEvent *event) {
+    Q_UNUSED(event)
+    QStyleOption opt;
+    opt.init(this);
+    QPainter p(this);
+    style()->drawPrimitive(QStyle::PE_Widget, &opt, &p, this);
+}
+
+void PlayerWidget::resizeEvent(QResizeEvent *event) {
+    volumeLabel->move((size().width() - volumeLabel->width()) / 2, (size().height() - volumeLabel->height()) / 2);
+    playButton->move((size().width() - playButton->width()) / 2, (size().height() - playButton->height()) / 2);
+    m_cover->setFixedSize(size());
+    QWidget::resizeEvent(event);
 }
 
 void PlayerWidget::timerEvent(QTimerEvent *event)

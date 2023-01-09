@@ -7,6 +7,7 @@
 FilterWidget::FilterWidget(QWidget *parent): QWidget(parent)
 {
     QVBoxLayout *layout = new QVBoxLayout(this);
+    layout->setMargin(1);
     setLayout(layout);
 
         //Add filter search

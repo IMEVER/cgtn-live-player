@@ -10,15 +10,12 @@
 
 #include "channelconf.h"
 
-const QString jsonFile = "tv.json";
-ChannelConf *ChannelConf::pInstance = nullptr;
+static const QString jsonFile = "tv.json";
+
 
 ChannelConf *ChannelConf::instance()
 {
-    if (pInstance == nullptr)
-    {
-        pInstance = new ChannelConf;
-    }
+    static ChannelConf *pInstance = new ChannelConf;
 
     return pInstance;
 }
@@ -27,7 +24,9 @@ ChannelConf::ChannelConf(/* args */)
 {
     groupList = new QStringList;
     conf.groups = new QList<Group *>();
+#ifdef QT_NO_DEBUG
     init();
+#endif
     loadTvVector();
 }
 
@@ -35,7 +34,9 @@ ChannelConf::~ChannelConf()
 {
     if (dirty)
     {
+#ifdef QT_NO_DEBUG
         save();
+#endif
     }
 
     delete groupList;
@@ -137,7 +138,7 @@ void ChannelConf::moveUp(int index)
         }
     }
 
-    if (groupIndex < conf.groups->count() && index >0)
+    if(groupIndex < conf.groups->count() && index >0)
     {
         Group *group = conf.groups->at(groupIndex);
         if (group->tvs->count() > index)
@@ -182,10 +183,8 @@ void ChannelConf::init()
     QFile file(configPath + "/" + jsonFile);
     Logger::instance().log("Local config path: " + configPath.toStdString() + ", name: " + file.fileName().toStdString());
 
-    if (!dir.exists())
-    {
-        dir.mkpath(".");
-    }
+    if (!dir.exists())    
+        dir.mkpath(".");    
 
     if (!file.exists())
     {
@@ -197,7 +196,12 @@ void ChannelConf::init()
 
 void ChannelConf::loadTvVector()
 {
+#ifdef QT_NO_DEBUG
     QFile file(QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation) + "/" + jsonFile);
+#else
+    QFile file(":/resource/tv.json");
+#endif
+
     file.open(QIODevice::ReadOnly | QIODevice::Text);
     QByteArray bytearray = file.readAll();
     file.close();
@@ -211,7 +215,7 @@ void ChannelConf::loadTvVector()
         json = QJsonDocument::fromJson(file.readAll());
         file.close();
     }
-    Logger::instance().log(json.toJson().toStdString(), Logger::kLogLevelDebug);
+//    Logger::instance().log(json.toJson().toStdString(), Logger::kLogLevelDebug);
     QJsonObject data = json.object();
 
     conf.version = data.value("version").toString();
